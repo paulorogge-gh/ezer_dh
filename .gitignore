@@ -1,0 +1,100 @@
+# ============================================
+# Ezer Desenvolvimento Humano - .gitignore
+# Projeto Node.js + MySQL + Front-end
+# ============================================
+
+# ========================
+# Node.js
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*.local
+
+# Logs
+logs/
+*.log
+logfile
+debug.log
+*.pid
+*.seed
+*.pid.lock
+
+# Cache e temporários
+.cache/
+.tmp/
+temp/
+tmp/
+
+# Build e dist
+dist/
+build/
+coverage/
+lib/
+bin/
+.out/
+.next/
+.nuxt/
+.svelte-kit/
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime*
+*.code-workspace
+
+# SO
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testes
+coverage/
+jest-cache/
+jest-html-reporters-*.html
+test-output/
+__tests__/output/
+
+# Backup ou exportação
+*.bak
+*.old
+*.orig
+*.save
+*.tar.gz
+*.zip
+
+# Banco de dados local
+*.sql
+*.db
+*.sqlite
+
+# Scripts e logs de deploy
+deploy.log
+*.sh.save
+*.bash_history
+*.bash_profile
+
+# Uploads e mídias locais
+uploads/
+public/uploads/
+storage/
+temp_files/
+*.mp4
+*.mp3
+*.wav
+
+# Arquivos de sistema do servidor
+*.pid
+*.sock
+*.lock
+
+# ============================================
+# Fim do arquivo .gitignore
+# ============================================
