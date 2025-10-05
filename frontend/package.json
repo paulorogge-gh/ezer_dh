@@ -1,0 +1,29 @@
+{
+  "name": "ezer-dh-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para Ezer Desenvolvimento Humano",
+  "main": "public/index.html",
+  "scripts": {
+    "start": "http-server public -p 8080 -o",
+    "dev": "http-server public -p 8080 -o -c-1",
+    "build": "echo 'Build process not implemented yet'",
+    "test": "echo 'Tests not implemented yet'"
+  },
+  "keywords": [
+    "html",
+    "css",
+    "javascript",
+    "bootstrap",
+    "gestao-pessoas"
+  ],
+  "author": "Ezer Desenvolvimento Humano",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.0",
+    "axios": "^1.4.0",
+    "chart.js": "^4.3.0"
+  }
+}

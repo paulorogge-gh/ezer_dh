@@ -1,191 +1,357 @@
-# 🧠 Ezer Desenvolvimento Humano (ezer_dh)
+# 🧠 Ezer Desenvolvimento Humano
 
-## 📘 Descrição Geral
+**Ezer Desenvolvimento Humano (Ezer DH)** é uma plataforma web voltada para **gestão de pessoas, performance e desenvolvimento humano**. A solução é oferecida para empresas clientes por meio de uma **consultoria especializada**.
 
-**Ezer Desenvolvimento Humano (ezer_dh)** é um sistema web voltado para **consultorias de RH e empresas clientes** com o objetivo de **gerenciar pessoas, desempenho e desenvolvimento humano**.  
-A plataforma permite que uma **consultoria** administre diversas empresas (clientes), e que cada empresa possua controle completo sobre seus **colaboradores, departamentos, feedbacks e avaliações de desempenho**.
-
----
-
-## 🚀 Objetivo do Sistema
-
-- Centralizar a **gestão de colaboradores e departamentos** de múltiplos clientes;
-- Facilitar o **lançamento de feedbacks** entre líderes e liderados;
-- Realizar **avaliações de desempenho 90º, 180º e 360º** com base em escalas Likert;
-- Registrar **ocorrências e treinamentos** de colaboradores;
-- Apoiar a consultoria na **análise e desenvolvimento humano** das empresas atendidas.
+O sistema permite gerenciar empresas, colaboradores, departamentos, ocorrências, feedbacks, treinamentos e avaliações de desempenho (90°, 180°, 360°), oferecendo uma visão completa da evolução e comportamento dos profissionais.
 
 ---
 
-## 🧩 Estrutura Funcional do Sistema
+## 🏗️ Visão geral do projeto
 
-### 1. **Cadastro de Cliente (Empresa)**
-- Dados cadastrais da empresa (razão social, CNPJ, email, telefone, endereço, etc.);
-- Múltiplos usuários (administrador, líderes e colaboradores);
-- Cadastro de **departamentos** e vínculo com colaboradores;
-- Cada colaborador pode pertencer a **mais de um departamento**.
+O **Ezer DH** é uma aplicação web modular composta por um **backend em Node.js (API e regras de negócio)** e um **frontend em HTML/CSS/Bootstrap**, integrados a um banco de dados **MySQL**.
 
----
+### 🎯 Objetivo
 
-### 2. **Cadastro de Colaboradores**
-#### 📋 Dados pessoais:
-- Empresa, CPF, Nome, Data de Nascimento, Email pessoal e corporativo, Telefone;
-- Departamento(s), Cargo, Remuneração, Data de admissão;
-- Tipo de contrato: **CLT, Prestador de Serviço, Estagiário, Jovem Aprendiz**;
-- Importação em massa via **modelo Excel**.
-
-#### ⚙️ Registro de Ocorrências:
-- Data da ocorrência;
-- Classificação: **Positivo, Negativo ou Neutro**;
-- Tipo: **Saúde Ocupacional, Ausência, Carreira**;
-  - Exemplos: Exame Admissional, Periódico, Falta, Promoção, Atestado, Advertência, Ideia/Contribuição, etc.
-- Campo de observações detalhadas.
-
-#### 🎓 Registro de Treinamentos:
-- Datas (início e fim);
-- Categoria: **Online ou Presencial**;
-- Nome do treinamento;
-- Carga horária;
-- Observações e anotações do avaliador.
+Automatizar e centralizar processos de **gestão de pessoas** e **avaliação de desempenho** para consultorias e empresas clientes, com controle de acesso hierárquico e indicadores de performance.
 
 ---
 
-### 3. **Departamentos**
-- Cadastro e gerenciamento de departamentos por empresa;
-- Vínculo de líderes e colaboradores;
-- Permite um colaborador estar em múltiplos departamentos;
-- Relacionamento direto com feedbacks e avaliações de desempenho.
+## 🧩 Funcionalidades principais
+
+### 1. Gestão de empresas (clientes)
+- Cadastro de empresas (clientes da consultoria).
+- Vinculação de departamentos e colaboradores.
+- Controle de acesso por empresa.
+
+### 2. Gestão de colaboradores
+- Dados pessoais e profissionais:
+  - Empresa, CPF, nome, data de nascimento, e-mails (pessoal e corporativo), telefone, departamento(s), cargo, remuneração, data de admissão.
+  - Tipo de contrato: **CLT**, **Prestador de Serviço**, **Estagiário** ou **Jovem Aprendiz**.
+- Importação em lote via modelo Excel.
+- Um colaborador pode pertencer a **mais de um departamento**.
+
+### 3. Registro de ocorrências
+- Data da ocorrência.
+- Classificação: **Positivo**, **Negativo** ou **Neutro**.
+- Tipo: Saúde Ocupacional, Ausência, Carreira (ex.: exame admissional, falta, promoção, advertência).
+- Observações detalhadas.
+
+### 4. Registro de treinamentos
+- Data inicial e final.
+- Categoria: **Online** ou **Presencial**.
+- Nome e carga horária.
+- Campo de observações.
+
+### 5. Feedbacks
+- Inseridos por **líderes** ou **colaboradores (360°)**.
+- Classificação: **Positivo**, **Para Melhorar** ou **Neutro**.
+- Campo livre para comentários.
+- Acesso limitado conforme relação hierárquica:
+  - Líder → liderados
+  - Colaborador → líder e pares do mesmo departamento
+
+### 6. Avaliação de desempenho
+- Escalas Likert de 1 a 5 (diferentes perspectivas):
+  - **90°:** Líder → Liderado
+  - **180°:** Líder ↔ Liderado
+  - **360°:** Líder ↔ Liderado + Pares
+- Questionário personalizável por empresa.
+- Comentário final por avaliação.
+- **PDI – Plano de Desenvolvimento Individual:** geração automática de plano de ação com base nas notas e feedbacks.
+
+### 7. Classificação de usuários e permissões
+- **Consultoria:** acesso global a todas as empresas e dados.
+- **Cliente (Empresa):**
+  - **Administrador:** gerencia colaboradores, departamentos, registros e feedbacks da empresa.
+  - **Líder:** pode lançar feedbacks e ocorrências apenas de seus liderados.
+  - **Colaborador:** participa das avaliações e feedbacks de seus líderes e colegas.
 
 ---
 
-### 4. **Feedbacks**
-- Inserção feita pelo **cliente (empresa)** e **líderes**;
-- Classificação: **Positivo**, **Para Melhorar** ou **Neutro**;
-- Campo aberto para descrição do feedback;
-- Controle de acesso:
-  - Líder → pode lançar feedbacks apenas para liderados;
-  - Colaborador → pode lançar feedbacks para **líderes e colegas de departamento** (modelo 360º).
+## 🧱 Tecnologias utilizadas
+
+| Camada | Tecnologia |
+|--------|------------|
+| **Backend** | Node.js (Express) |
+| **Frontend** | HTML5, CSS3, Bootstrap 5 |
+| **Banco de Dados** | MySQL |
+| **Ambiente** | Azure (Linux VM) |
+| **Gerenciador de pacotes** | npm |
+| **Execução** | Node / nodemon |
+| **Configurações** | dotenv |
 
 ---
 
-### 5. **Avaliação de Desempenho**
-- Sistema de avaliação baseado na **escala Likert (1 a 5)**;
-- Três níveis:
-  - **90º** – Líder avalia liderado;
-  - **180º** – Líder e liderado se avaliam mutuamente;
-  - **360º** – Líder, liderado e pares (colegas de departamento) se avaliam;
-- Cada empresa possui **questionário próprio** (personalizável);
-- Comentário final obrigatório;
-- **PDI (Plano de Desenvolvimento Individual)** gerado automaticamente a partir das notas obtidas.
+## 📂 Estrutura de diretórios
 
----
-
-### 6. **Futuras Expansões**
-- **Análise de Performance:** dashboards com métricas de desempenho e engajamento;
-- **Pesquisas Organizacionais:** coleta de percepções sobre clima, cultura e liderança.
-
----
-
-## 👥 Classificação de Usuários
-
-| Tipo de Usuário | Permissões |
-|-----------------|-------------|
-| **Consultoria (Global)** | Acesso total a todas as empresas, colaboradores e registros. |
-| **Administrador da Empresa** | Acesso total aos dados da sua empresa (cadastros, relatórios, avaliações). |
-| **Líder** | Acesso aos seus liderados (feedbacks, avaliações, ocorrências, treinamentos). |
-| **Colaborador** | Pode avaliar líderes e colegas de departamento (modelo 360º) e visualizar seu próprio histórico. |
-
----
-
-## 🏗️ Arquitetura do Projeto
-
-### 🧱 Estrutura
-- **Backend:** Node.js (Express)
-- **Frontend:** HTML5, CSS3, Bootstrap
-- **Banco de Dados:** MySQL
-- **ORM:** (opcional) Sequelize ou consultas SQL nativas
-- **Deploy:** Servidor Linux (Ubuntu / Apache ou Nginx)
-
-### 📂 Estrutura de Diretórios
-
+```
 /ezer_dh
+├── backend/                          # Backend API (Node.js + Express)
+│   ├── src/                          # Código fonte da aplicação
+│   │   ├── app.js                    # Ponto de entrada da aplicação
+│   │   ├── config/                   # Configurações (db, jwt, constantes)
+│   │   │   ├── db.js                 # Configuração do banco de dados
+│   │   │   ├── jwt.js                # Configuração JWT
+│   │   │   └── constants.js          # Constantes da aplicação
+│   │   ├── controllers/              # Controllers das rotas
+│   │   │   ├── authController.js     # Autenticação
+│   │   │   ├── empresaController.js  # Gestão de empresas
+│   │   │   ├── colaboradorController.js # Gestão de colaboradores
+│   │   │   ├── departamentoController.js # Gestão de departamentos
+│   │   │   ├── ocorrenciaController.js # Gestão de ocorrências
+│   │   │   ├── treinamentoController.js # Gestão de treinamentos
+│   │   │   ├── feedbackController.js # Gestão de feedbacks
+│   │   │   ├── avaliacaoController.js # Gestão de avaliações
+│   │   │   └── pdiController.js      # Gestão de PDI
+│   │   ├── models/                   # Modelos do banco de dados
+│   │   │   ├── consultoria.js        # Modelo da consultoria
+│   │   │   ├── empresa.js            # Modelo de empresa
+│   │   │   ├── departamento.js       # Modelo de departamento
+│   │   │   ├── colaborador.js        # Modelo de colaborador
+│   │   │   ├── colaboradorDepartamento.js # Relação N:N
+│   │   │   ├── ocorrencia.js         # Modelo de ocorrência
+│   │   │   ├── treinamento.js        # Modelo de treinamento
+│   │   │   ├── feedback.js           # Modelo de feedback
+│   │   │   ├── avaliacao.js          # Modelo de avaliação
+│   │   │   └── pdi.js                # Modelo de PDI
+│   │   ├── routes/                   # Definição das rotas
+│   │   │   ├── authRoutes.js         # Rotas de autenticação
+│   │   │   ├── empresaRoutes.js      # Rotas de empresas
+│   │   │   ├── colaboradorRoutes.js  # Rotas de colaboradores
+│   │   │   ├── departamentoRoutes.js # Rotas de departamentos
+│   │   │   ├── ocorrenciaRoutes.js   # Rotas de ocorrências
+│   │   │   ├── treinamentoRoutes.js  # Rotas de treinamentos
+│   │   │   ├── feedbackRoutes.js     # Rotas de feedbacks
+│   │   │   ├── avaliacaoRoutes.js    # Rotas de avaliações
+│   │   │   └── pdiRoutes.js          # Rotas de PDI
+│   │   ├── services/                 # Lógica de negócio
+│   │   │   ├── feedbackService.js    # Serviços de feedback
+│   │   │   ├── avaliacaoService.js   # Serviços de avaliação
+│   │   │   └── pdiService.js         # Serviços de PDI
+│   │   ├── middlewares/              # Middlewares
+│   │   │   ├── authMiddleware.js     # Middleware de autenticação
+│   │   │   ├── rbacMiddleware.js     # Controle de acesso
+│   │   │   └── validationMiddleware.js # Validação de dados
+│   │   └── utils/                    # Utilitários
+│   │       ├── logger.js             # Sistema de logs
+│   │       └── excelImporter.js      # Importação de Excel
+│   ├── public/                       # Arquivos públicos
+│   │   └── uploads/                  # Uploads de arquivos
+│   ├── logs/                         # Logs da aplicação
+│   ├── .env.example                  # Exemplo de variáveis de ambiente
+│   └── package.json                  # Dependências do backend
 │
-├── /src
-│ ├── /config # Configurações gerais e conexão ao banco
-│ ├── /controllers # Lógica de negócios e validações
-│ ├── /models # Definições de tabelas e relacionamentos
-│ ├── /routes # Rotas HTTP (API REST)
-│ ├── /middlewares # Autenticação e controle de acesso
-│ ├── /services # Regras auxiliares e integrações
-│ └── /utils # Funções utilitárias e helpers
+├── frontend/                         # Frontend (HTML/CSS/JS + Bootstrap)
+│   ├── src/                          # Código fonte do frontend
+│   │   ├── components/               # Componentes reutilizáveis
+│   │   │   ├── navbar.html           # Barra de navegação
+│   │   │   ├── footer.html           # Rodapé
+│   │   │   └── cards.html            # Componentes de cards
+│   │   ├── pages/                    # Páginas da aplicação
+│   │   │   ├── login.html            # Página de login
+│   │   │   ├── dashboard.html        # Dashboard principal
+│   │   │   ├── colaboradores.html    # Gestão de colaboradores
+│   │   │   ├── departamentos.html    # Gestão de departamentos
+│   │   │   ├── ocorrencias.html      # Gestão de ocorrências
+│   │   │   ├── treinamentos.html     # Gestão de treinamentos
+│   │   │   ├── feedbacks.html        # Gestão de feedbacks
+│   │   │   ├── avaliacoes.html       # Gestão de avaliações
+│   │   │   └── pdi.html              # Gestão de PDI
+│   │   └── utils/                    # Utilitários do frontend
+│   ├── public/                       # Arquivos públicos
+│   │   ├── index.html                # Página principal
+│   │   ├── css/                      # Estilos CSS
+│   │   ├── js/                       # Scripts JavaScript
+│   │   ├── img/                      # Imagens
+│   │   └── fonts/                    # Fontes
+│   └── package.json                  # Dependências do frontend
 │
-├── /public
-│ ├── /css # Estilos Bootstrap e customizados
-│ ├── /js # Scripts do frontend
-│ ├── /img # Imagens e ícones
-│ └── /uploads # Importações via Excel e arquivos anexos
+├── scripts/                          # Scripts auxiliares
+│   └── initial.js                    # Script de inicialização
 │
-├── /views # Páginas HTML renderizadas
+├── database/                         # Arquivos do banco de dados
+│   └── ezer_dh.sql                   # Script de criação do banco
 │
-├── /tests # Scripts e relatórios de testes
+├── docs/                             # Documentação
+│   ├── arquitetura.md                # Documentação de arquitetura
+│   ├── API.md                        # Documentação da API
+│   └── DEPLOYMENT.md                 # Guia de deploy
 │
-├── package.json
-├── app.js # Ponto de entrada do servidor Node.js
-├── .env # Configurações de ambiente
-└── README.md
-
+├── tests/                            # Testes
+│   ├── unit/                         # Testes unitários
+│   │   ├── backend/                  # Testes do backend
+│   │   └── frontend/                 # Testes do frontend
+│   ├── integration/                  # Testes de integração
+│   ├── e2e/                          # Testes end-to-end
+│   ├── fixtures/                     # Dados de teste
+│   ├── jest.config.js                # Configuração do Jest
+│   └── setup.js                      # Configuração dos testes
+│
+├── .env.example                      # Exemplo de variáveis de ambiente
+├── .gitignore                        # Arquivos ignorados pelo Git
+├── package.json                      # Configuração do projeto raiz
+└── README.md                         # Este arquivo
+```
 
 ---
 
-## 🗄️ Banco de Dados – ezer_dh
+## ⚙️ Configuração do ambiente
 
-### Principais Tabelas
-- `consultorias`
-- `empresas`
-- `departamentos`
-- `colaboradores`
-- `usuarios`
-- `ocorrencias`
-- `treinamentos`
-- `feedbacks`
-- `avaliacoes`
-- `avaliacoes_perguntas`
-- `avaliacoes_respostas`
-- `pdi_planos`
+Antes de começar, copie o arquivo de exemplo de ambiente e ajuste as variáveis sensíveis. Não comite o `.env`.
 
-### Principais Relacionamentos
-- Uma **consultoria** → várias **empresas**
-- Uma **empresa** → vários **departamentos** e **colaboradores**
-- Um **colaborador** → pode pertencer a **múltiplos departamentos**
-- Um **líder** → avalia **liderados e pares**
-- Um **colaborador** → envia feedbacks a **líderes e colegas**
+### 1) Instalar dependências (backend)
+```bash
+cd backend
+npm install
+```
 
----
+### 2) Arquivo `.env` (exemplo)
 
-## 🔐 Controle de Acesso
+As credenciais de conexão com o banco devem ser configuradas no arquivo `.env` — **não** deixe valores sensíveis no repositório.
 
-O sistema utiliza **autenticação por sessão (JWT ou cookie)** e middleware de controle de acesso:
+Exemplo:
+```
+PORT=3000
+# DB_HOST deve apontar para o host do banco no Azure (não use `localhost` em produção)
+DB_HOST=<seu_host_azure_mysql>
+DB_USER=<seu_usuario>
+DB_PASSWORD=<sua_senha>
+DB_NAME=ezer_dh
+# Habilite SSL conforme a configuração do provedor
+DB_SSL=true
+```
 
-- Verifica tipo de usuário antes de acessar qualquer rota;
-- Restringe ações (ex: colaborador não pode cadastrar outro colaborador);
-- Registra logs de login, ações críticas e falhas de autenticação.
+Observação: o banco de dados do projeto é hospedado no Azure; nunca instale ou use uma instância local em produção. As credenciais ficam no arquivo `.env` e a conexão deve usar SSL quando exigido pelo provedor [[memory:8380388]].
 
 ---
 
-## ⚙️ Ambiente de Desenvolvimento
+## Modelo lógico e tabelas principais
 
-### Requisitos
-- Node.js 20+
-- MySQL 8+
-- NPM ou Yarn
-- Servidor Linux com Apache ou Nginx
+Principais tabelas (resumo):
+- clientes (empresas)
+- departamentos
+- colaboradores
+- colaboradores_departamentos (relação N:N)
+- ocorrencias
+- treinamentos
+- feedbacks
+- avaliacoes
+- pdi
+- usuarios
+- logs
 
-### Instalação
+Relacionamentos principais:
+- empresa 1:N departamentos
+- empresa 1:N colaboradores
+- colaboradores N:N departamentos
+- colaboradores 1:N ocorrencias
+- colaboradores 1:N treinamentos
+- colaboradores N:N feedbacks
+- colaboradores N:N avaliacoes
+
+---
+
+## 🧩 Etapas do desenvolvimento (resumo)
+
+1. Planejamento funcional
+   - Levantamento de requisitos
+   - Definição de perfis de usuário e regras de acesso
+
+2. Modelagem do banco de dados
+   - Criação do DER
+   - Definição de relacionamentos e restrições (FKs)
+
+3. Arquitetura do projeto
+   - Separação por camadas (routes, controllers, models, config)
+   - Configuração com `dotenv`
+
+4. Desenvolvimento
+   - Implementação da API base (Express)
+   - Criação das rotas e controllers
+   - Implementação da conexão e consultas MySQL
+   - Integração com frontend
+
+5. Testes e validação
+   - Testes unitários e de integração (Jest, Supertest)
+   - Testes de usabilidade
+
+6. Deploy e manutenção
+   - Publicação em servidor Azure (Linux)
+   - Configuração de PM2 / Nginx
+   - Monitoramento e logs
+
+---
+
+## 🧪 Testes planejados
+
+| Tipo | Descrição | Ferramenta |
+|------|-----------|-----------|
+| Unitário | Teste de funções individuais | Jest |
+| Integração | Teste entre módulos (API ↔ DB) | Supertest |
+| Usabilidade | Testes com usuários reais | Sessões piloto |
+| Validação | Cross-check de dados e regras | Scripts automatizados |
+
+---
+
+## 💼 Futuras expansões
+
+- Análise de performance (BI) e dashboards
+- Integração com Power BI
+- Pesquisas internas (clima organizacional)
+- Notificações e relatórios automatizados (e-mail / PDF)
+
+---
+
+## 👥 Equipes e papéis (resumo)
+
+| Papel | Responsabilidade |
+|-------|------------------|
+| Consultoria | Administração global e monitoramento |
+| Administrador da Empresa | Gestão interna de colaboradores e cadastros |
+| Líder | Inserção de feedbacks e avaliações dos liderados |
+| Colaborador | Participação em avaliações 360° |
+
+---
+
+## 🛡️ Segurança e controle de acesso
+
+- Autenticação baseada em e-mail corporativo e senha
+- Controle de permissões por nível de usuário
+- Logs de atividade em banco
+- Separação de dados entre empresas clientes
+
+---
+
+## ⚡ Execução rápida (resumo)
 
 ```bash
-git clone https://github.com/paulorogge-gh/ezer_dh.git
-cd ezer_dh
+# Clonar o projeto
+git clone https://github.com/seuusuario/ezer_dh.git
+cd ezer_dh/backend
+
+# Instalar dependências
 npm install
+
+# Configurar ambiente (copiar e editar .env)
 cp .env.example .env
-# Configure variáveis de ambiente no .env
-npm start
+
+# Executar em modo de desenvolvimento
+npm run dev
+```
+
+---
+
+## 🧾 Licença
+
+Este projeto é propriedade intelectual da Ezer Desenvolvimento Humana e não deve ser redistribuído sem autorização.
+
+---
+
+## 📞 Contato
+
+Ezer Desenvolvimento Humano
+
+Desenvolvimento: Paulo Roggê
+
+📧 contato@ezerdh.com.br
+🌐 `https://ezerdh.com.br`

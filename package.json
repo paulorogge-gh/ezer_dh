@@ -1,0 +1,30 @@
+{
+  "name": "ezer-dh",
+  "version": "1.0.0",
+  "description": "Plataforma de gestão de pessoas e desenvolvimento humano",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "test": "jest",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "setup": "node scripts/initial.js"
+  },
+  "keywords": [
+    "gestao-pessoas",
+    "desenvolvimento-humano",
+    "avaliacao-desempenho",
+    "rh"
+  ],
+  "author": "Ezer Desenvolvimento Humano",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "jest": "^29.6.2"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
