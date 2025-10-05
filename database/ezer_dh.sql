@@ -6,7 +6,29 @@ CREATE DATABASE IF NOT EXISTS ezer_dh;
 USE ezer_dh;
 
 -- ==================================================
--- 1. Consultoria
+-- 1. Usuários (Sistema de Autenticação)
+-- ==================================================
+CREATE TABLE usuario (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    tipo_usuario ENUM('consultoria','empresa','colaborador') NOT NULL,
+    id_referencia INT NOT NULL, -- ID da tabela específica (consultoria, empresa, colaborador)
+    status ENUM('Ativo','Inativo') DEFAULT 'Ativo',
+    ultimo_login TIMESTAMP NULL,
+    tentativas_login INT DEFAULT 0,
+    bloqueado_ate TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Índices para otimização
+    INDEX idx_email (email),
+    INDEX idx_tipo_referencia (tipo_usuario, id_referencia),
+    INDEX idx_status (status)
+);
+
+-- ==================================================
+-- 2. Consultoria
 -- ==================================================
 CREATE TABLE consultoria (
     id_consultoria INT AUTO_INCREMENT PRIMARY KEY,
@@ -19,7 +41,7 @@ CREATE TABLE consultoria (
 );
 
 -- ==================================================
--- 2. Empresa (Cliente)
+-- 3. Empresa (Cliente)
 -- ==================================================
 CREATE TABLE empresa (
     id_empresa INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +59,7 @@ CREATE TABLE empresa (
 );
 
 -- ==================================================
--- 3. Departamento
+-- 4. Departamento
 -- ==================================================
 CREATE TABLE departamento (
     id_departamento INT AUTO_INCREMENT PRIMARY KEY,
@@ -50,7 +72,7 @@ CREATE TABLE departamento (
 );
 
 -- ==================================================
--- 4. Colaborador
+-- 5. Colaborador
 -- ==================================================
 CREATE TABLE colaborador (
     id_colaborador INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,7 +94,7 @@ CREATE TABLE colaborador (
 );
 
 -- ==================================================
--- 5. Colaborador_Departamento (N:N)
+-- 6. Colaborador_Departamento (N:N)
 -- ==================================================
 CREATE TABLE colaborador_departamento (
     id_colaborador INT NOT NULL,
@@ -83,7 +105,7 @@ CREATE TABLE colaborador_departamento (
 );
 
 -- ==================================================
--- 6. Ocorrência
+-- 7. Ocorrência
 -- ==================================================
 CREATE TABLE ocorrencia (
     id_ocorrencia INT AUTO_INCREMENT PRIMARY KEY,
@@ -99,7 +121,7 @@ CREATE TABLE ocorrencia (
 );
 
 -- ==================================================
--- 7. Treinamento
+-- 8. Treinamento
 -- ==================================================
 CREATE TABLE treinamento (
     id_treinamento INT AUTO_INCREMENT PRIMARY KEY,
@@ -116,7 +138,7 @@ CREATE TABLE treinamento (
 );
 
 -- ==================================================
--- 8. Feedback
+-- 9. Feedback
 -- ==================================================
 CREATE TABLE feedback (
     id_feedback INT AUTO_INCREMENT PRIMARY KEY,
@@ -133,7 +155,7 @@ CREATE TABLE feedback (
 );
 
 -- ==================================================
--- 9. Avaliação de Desempenho
+-- 10. Avaliação de Desempenho
 -- ==================================================
 CREATE TABLE avaliacao (
     id_avaliacao INT AUTO_INCREMENT PRIMARY KEY,
@@ -150,7 +172,7 @@ CREATE TABLE avaliacao (
 );
 
 -- ==================================================
--- 10. PDI (Plano de Desenvolvimento Individual)
+-- 11. PDI (Plano de Desenvolvimento Individual)
 -- ==================================================
 CREATE TABLE pdi (
     id_pdi INT AUTO_INCREMENT PRIMARY KEY,
@@ -172,3 +194,37 @@ CREATE INDEX idx_colaborador_cpf ON colaborador(cpf);
 CREATE INDEX idx_colaborador_email_corp ON colaborador(email_corporativo);
 CREATE INDEX idx_feedback_data ON feedback(data);
 CREATE INDEX idx_avaliacao_data ON avaliacao(data);
+
+-- ==================================================
+-- Dados de exemplo para teste
+-- ==================================================
+
+-- Inserir consultoria de exemplo
+INSERT INTO consultoria (nome, email, telefone) VALUES 
+('Ezer Consultoria', 'contato@ezer.com', '(11) 99999-9999');
+
+-- Inserir empresa de exemplo
+INSERT INTO empresa (id_consultoria, nome, cnpj, email, telefone, endereco, responsavel) VALUES 
+(1, 'Empresa Exemplo Ltda', '12.345.678/0001-90', 'contato@empresaexemplo.com', '(11) 88888-8888', 'Rua Exemplo, 123', 'João Silva');
+
+-- Inserir departamento de exemplo
+INSERT INTO departamento (id_empresa, nome, descricao) VALUES 
+(1, 'Recursos Humanos', 'Departamento responsável pela gestão de pessoas'),
+(1, 'Tecnologia', 'Departamento de desenvolvimento e suporte técnico');
+
+-- Inserir colaborador de exemplo
+INSERT INTO colaborador (id_empresa, cpf, nome, data_nascimento, email_corporativo, telefone, cargo, data_admissao, tipo_contrato) VALUES 
+(1, '123.456.789-00', 'Maria Santos', '1990-05-15', 'maria.santos@empresaexemplo.com', '(11) 77777-7777', 'Analista de RH', '2023-01-15', 'CLT'),
+(1, '987.654.321-00', 'Pedro Oliveira', '1985-08-20', 'pedro.oliveira@empresaexemplo.com', '(11) 66666-6666', 'Desenvolvedor', '2023-02-01', 'CLT');
+
+-- Associar colaboradores aos departamentos
+INSERT INTO colaborador_departamento (id_colaborador, id_departamento) VALUES 
+(1, 1), -- Maria no RH
+(2, 2); -- Pedro em Tecnologia
+
+-- Inserir usuários de exemplo (senhas: "123456" criptografadas com bcrypt)
+INSERT INTO usuario (email, senha, tipo_usuario, id_referencia) VALUES 
+('admin@ezer.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'consultoria', 1),
+('admin@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'empresa', 1),
+('maria.santos@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'colaborador', 1),
+('pedro.oliveira@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'colaborador', 2);

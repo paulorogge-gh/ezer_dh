@@ -16,6 +16,29 @@ Automatizar e centralizar processos de **gestão de pessoas** e **avaliação de
 
 ---
 
+## 🌐 Configuração de Portas
+
+| Serviço | Porta | URL | Descrição |
+|---------|-------|-----|-----------|
+| **Frontend** | 3000 | http://localhost:3000 | Interface web do usuário |
+| **Backend API** | 3001 | http://localhost:3001 | API REST e autenticação |
+| **Health Check** | 3001 | http://localhost:3001/api/health | Verificação de status |
+
+### 🚀 Como iniciar o projeto:
+```bash
+# Iniciar ambos os servidores
+./start.sh
+
+# Ou iniciar separadamente:
+# Backend (porta 3001)
+cd backend && npm start
+
+# Frontend (porta 3000)  
+cd frontend && npm start
+```
+
+---
+
 ## 🧩 Funcionalidades principais
 
 ### 1. Gestão de empresas (clientes)
@@ -72,8 +95,8 @@ Automatizar e centralizar processos de **gestão de pessoas** e **avaliação de
 
 | Camada | Tecnologia |
 |--------|------------|
-| **Backend** | Node.js (Express) |
-| **Frontend** | HTML5, CSS3, Bootstrap 5 |
+| **Backend** | Node.js (Express) - Porta 3001 |
+| **Frontend** | HTML5, CSS3, Bootstrap 5 - Porta 3000 |
 | **Banco de Dados** | MySQL |
 | **Ambiente** | Azure (Linux VM) |
 | **Gerenciador de pacotes** | npm |
@@ -211,7 +234,7 @@ As credenciais de conexão com o banco devem ser configuradas no arquivo `.env` 
 
 Exemplo:
 ```
-PORT=3000
+PORT_API=3000
 # DB_HOST deve apontar para o host do banco no Azure (não use `localhost` em produção)
 DB_HOST=<seu_host_azure_mysql>
 DB_USER=<seu_usuario>
@@ -251,6 +274,38 @@ Relacionamentos principais:
 
 ---
 
+## 🔐 Sistema de Autenticação
+
+### Estrutura de Usuários
+O sistema utiliza uma **tabela unificada de usuários** (`usuario`) que centraliza a autenticação para todos os tipos de usuários:
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id_usuario` | INT | Chave primária |
+| `email` | VARCHAR(255) | Email único para login |
+| `senha` | VARCHAR(255) | Senha criptografada (bcrypt) |
+| `tipo_usuario` | ENUM | 'consultoria', 'empresa', 'colaborador' |
+| `id_referencia` | INT | ID da tabela específica (consultoria, empresa, colaborador) |
+| `status` | ENUM | 'Ativo', 'Inativo' |
+| `ultimo_login` | TIMESTAMP | Data do último acesso |
+| `tentativas_login` | INT | Contador de tentativas falhadas |
+| `bloqueado_ate` | TIMESTAMP | Data de desbloqueio (se bloqueado) |
+
+### Fluxo de Autenticação
+1. **Login**: Usuário informa email/senha
+2. **Validação**: Sistema busca na tabela `usuario`
+3. **Identificação**: `tipo_usuario` + `id_referencia` define o perfil
+4. **Dados**: Sistema busca dados específicos na tabela correspondente
+5. **Permissões**: RBAC aplicado baseado no `tipo_usuario`
+
+### Segurança
+- **Senhas**: Criptografadas com bcrypt (12 rounds)
+- **Tokens**: JWT com expiração de 24h
+- **Bloqueio**: Após 5 tentativas falhidas (30 min)
+- **RBAC**: Controle granular por módulo/ação
+
+---
+
 ## 🧩 Etapas do desenvolvimento (resumo)
 
 1. Planejamento funcional
@@ -260,6 +315,7 @@ Relacionamentos principais:
 2. Modelagem do banco de dados
    - Criação do DER
    - Definição de relacionamentos e restrições (FKs)
+   - Sistema de autenticação com tabela `usuario` unificada
 
 3. Arquitetura do projeto
    - Separação por camadas (routes, controllers, models, config)

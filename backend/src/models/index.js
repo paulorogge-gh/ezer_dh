@@ -1,0 +1,29 @@
+// ==================================================
+// Exportação de todos os modelos
+// ==================================================
+
+const Usuario = require('./usuario');
+const Consultoria = require('./consultoria');
+const Empresa = require('./empresa');
+const Departamento = require('./departamento');
+const Colaborador = require('./colaborador');
+const ColaboradorDepartamento = require('./colaboradorDepartamento');
+const Ocorrencia = require('./ocorrencia');
+const Treinamento = require('./treinamento');
+const Feedback = require('./feedback');
+const Avaliacao = require('./avaliacao');
+const Pdi = require('./pdi');
+
+module.exports = {
+    Usuario,
+    Consultoria,
+    Empresa,
+    Departamento,
+    Colaborador,
+    ColaboradorDepartamento,
+    Ocorrencia,
+    Treinamento,
+    Feedback,
+    Avaliacao,
+    Pdi
+};
