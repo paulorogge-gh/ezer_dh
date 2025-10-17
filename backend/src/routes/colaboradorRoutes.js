@@ -123,4 +123,14 @@ router.get('/:id/stats',
     ColaboradorController.getStats
 );
 
+/**
+ * @route   GET /api/colaboradores/stats/global
+ * @desc    Estatísticas globais de colaboradores
+ * @access  Private (Empresa/Consultoria)
+ */
+router.get('/stats/global',
+    requireColaboradorOrAbove,
+    ColaboradorController.getGlobalStats
+);
+
 module.exports = router;

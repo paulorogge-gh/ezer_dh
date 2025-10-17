@@ -79,7 +79,8 @@ app.get('/login', (req, res) => {
     res.redirect('/login-minimal');
 });
 
-// Rota para colaboradores
+// Rota para colaboradores removida por padronização
+// Rota reativada para colaboradores
 app.get('/colaboradores', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'colaboradores.html'));
 });

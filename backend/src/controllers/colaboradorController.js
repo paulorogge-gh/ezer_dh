@@ -3,6 +3,22 @@ const { Colaborador, Departamento } = require('../models');
 const { logDatabase, logError } = require('../utils/logger');
 
 class ColaboradorController {
+    static normalizeDate(value) {
+        if (!value) return null;
+        try {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                const [d, m, y] = value.split('/');
+                return `${y}-${m}-${d}`;
+            }
+            const d = new Date(value);
+            if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+            return null;
+        } catch { return null; }
+    }
+
+    static sanitizeString(v) { return typeof v === 'string' ? v.trim() : v; }
+
     /**
      * Listar todos os colaboradores
      */
@@ -75,23 +91,55 @@ class ColaboradorController {
      */
     static async create(req, res) {
         try {
-            const colaboradorData = req.body;
-            
-            // Validação básica
-            if (!colaboradorData.nome || !colaboradorData.cpf || !colaboradorData.id_empresa) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Nome, CPF e ID da empresa são obrigatórios'
-                });
+            const body = req.body || {};
+            const departamentos = Array.isArray(body.departamentos) ? body.departamentos : [];
+            const payload = {
+                id_empresa: body.id_empresa,
+                cpf: ColaboradorController.sanitizeString(body.cpf),
+                nome: ColaboradorController.sanitizeString(body.nome),
+                data_nascimento: ColaboradorController.normalizeDate(body.data_nascimento),
+                email_pessoal: ColaboradorController.sanitizeString(body.email_pessoal) || null,
+                email_corporativo: ColaboradorController.sanitizeString(body.email_corporativo) || null,
+                telefone: ColaboradorController.sanitizeString(body.telefone) || null,
+                cargo: ColaboradorController.sanitizeString(body.cargo) || null,
+                remuneracao: body.remuneracao ?? null,
+                data_admissao: ColaboradorController.normalizeDate(body.data_admissao),
+                tipo_contrato: ColaboradorController.sanitizeString(body.tipo_contrato) || null,
+                status: body.status || 'Ativo'
+            };
+
+            // RF024 - Validações obrigatórias de cadastro
+            const missing = [];
+            if (!payload.id_empresa) missing.push('Empresa');
+            if (!payload.cpf) missing.push('CPF');
+            if (!payload.nome) missing.push('Nome');
+            if (!payload.data_nascimento) missing.push('Data de Nascimento');
+            if (!payload.email_corporativo && !payload.email_pessoal) missing.push('E-mail');
+            if (!payload.telefone) missing.push('Telefone');
+            if (!Array.isArray(departamentos) || departamentos.length === 0) missing.push('Departamento(s)');
+            if (!payload.cargo) missing.push('Cargo');
+            if (payload.remuneracao === null || payload.remuneracao === '') missing.push('Remuneração');
+            if (!payload.data_admissao) missing.push('Data de Admissão');
+            if (!payload.tipo_contrato) missing.push('Tipo de Contrato');
+            if (missing.length) {
+                return res.status(400).json({ success: false, error: `Campos obrigatórios ausentes: ${missing.join(', ')}` });
             }
 
             // Criptografar senha se fornecida
-            if (colaboradorData.senha) {
-                colaboradorData.senha = await bcrypt.hash(colaboradorData.senha, 12);
+            if (body.senha) {
+                payload.senha = await bcrypt.hash(body.senha, 12);
             }
 
-            const colaboradorId = await Colaborador.create(colaboradorData);
+            const colaboradorId = await Colaborador.create(payload);
             const colaborador = await Colaborador.findById(colaboradorId);
+            // Associar departamentos
+            try {
+                for (const depId of departamentos) {
+                    await colaborador.addDepartamento(depId);
+                }
+            } catch (e) {
+                logError(e, req);
+            }
             
             logDatabase('INSERT', 'colaborador', { id: colaboradorId });
             
@@ -123,7 +171,7 @@ class ColaboradorController {
     static async update(req, res) {
         try {
             const { id } = req.params;
-            const colaboradorData = req.body;
+            const body = req.body || {};
             
             const colaborador = await Colaborador.findById(id);
             
@@ -135,13 +183,42 @@ class ColaboradorController {
             }
 
             // Criptografar nova senha se fornecida
-            if (colaboradorData.senha) {
-                colaboradorData.senha = await bcrypt.hash(colaboradorData.senha, 12);
+            if (body.senha) {
+                body.senha = await bcrypt.hash(body.senha, 12);
             }
 
-            await colaborador.update(colaboradorData);
+            // Aceitar atualização parcial (ex: apenas status) e normalizar datas/strings
+            const merged = {
+                id_empresa: body.id_empresa ?? colaborador.id_empresa,
+                nome: ColaboradorController.sanitizeString(body.nome) ?? colaborador.nome,
+                cpf: ColaboradorController.sanitizeString(body.cpf) ?? colaborador.cpf,
+                data_nascimento: body.hasOwnProperty('data_nascimento') ? ColaboradorController.normalizeDate(body.data_nascimento) : colaborador.data_nascimento,
+                email_pessoal: body.hasOwnProperty('email_pessoal') ? (ColaboradorController.sanitizeString(body.email_pessoal) || null) : colaborador.email_pessoal,
+                email_corporativo: body.hasOwnProperty('email_corporativo') ? (ColaboradorController.sanitizeString(body.email_corporativo) || null) : colaborador.email_corporativo,
+                telefone: body.hasOwnProperty('telefone') ? (ColaboradorController.sanitizeString(body.telefone) || null) : colaborador.telefone,
+                cargo: body.hasOwnProperty('cargo') ? (ColaboradorController.sanitizeString(body.cargo) || null) : colaborador.cargo,
+                remuneracao: body.hasOwnProperty('remuneracao') ? (body.remuneracao ?? null) : colaborador.remuneracao,
+                data_admissao: body.hasOwnProperty('data_admissao') ? ColaboradorController.normalizeDate(body.data_admissao) : colaborador.data_admissao,
+                tipo_contrato: body.hasOwnProperty('tipo_contrato') ? (ColaboradorController.sanitizeString(body.tipo_contrato) || null) : colaborador.tipo_contrato,
+                status: body.status ?? colaborador.status
+            };
+
+            await colaborador.update(merged);
             const colaboradorAtualizado = await Colaborador.findById(id);
             
+            // Sincronizar departamentos se enviados
+            if (Array.isArray(body.departamentos)) {
+                try {
+                    const atuais = await colaborador.getDepartamentos();
+                    const atuaisIds = (atuais || []).map(d => d.id_departamento);
+                    const novos = body.departamentos.map(Number).filter(Boolean);
+                    const toAdd = novos.filter(x => !atuaisIds.includes(x));
+                    const toRemove = atuaisIds.filter(x => !novos.includes(x));
+                    for (const depId of toRemove) { await colaborador.removeDepartamento(depId); }
+                    for (const depId of toAdd) { await colaborador.addDepartamento(depId); }
+                } catch (e) { logError(e, req); }
+            }
+
             logDatabase('UPDATE', 'colaborador', { id });
             
             res.json({
@@ -264,7 +341,7 @@ class ColaboradorController {
                 });
             }
 
-            await colaborador.addToDepartamento(departamento_id);
+            await colaborador.addDepartamento(departamento_id);
             
             logDatabase('INSERT', 'colaborador_departamento', { colaborador_id: id, departamento_id });
             
@@ -297,7 +374,7 @@ class ColaboradorController {
                 });
             }
 
-            await colaborador.removeFromDepartamento(departamento_id);
+            await colaborador.removeDepartamento(departamento_id);
             
             logDatabase('DELETE', 'colaborador_departamento', { colaborador_id: id, departamento_id });
             
@@ -415,6 +492,22 @@ class ColaboradorController {
                 success: false,
                 error: 'Erro ao buscar estatísticas do colaborador'
             });
+        }
+    }
+
+    /**
+     * Estatísticas globais (total/ativos/inativos)
+     */
+    static async getGlobalStats(req, res) {
+        try {
+            const colaboradores = await Colaborador.findAll();
+            const total = colaboradores.length;
+            const ativos = colaboradores.filter(c => c.status === 'Ativo').length;
+            const inativos = colaboradores.filter(c => c.status === 'Inativo').length;
+            res.json({ success: true, data: { total, ativos, inativos } });
+        } catch (error) {
+            logError(error, req);
+            res.status(500).json({ success: false, error: 'Erro ao obter estatísticas de colaboradores' });
         }
     }
 }

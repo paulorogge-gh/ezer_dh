@@ -6,6 +6,7 @@ class Colaborador {
         this.id_empresa = data.id_empresa;
         this.cpf = data.cpf;
         this.nome = data.nome;
+    this.empresa_nome = data.empresa_nome; // garantir exibição na listagem
         this.data_nascimento = data.data_nascimento;
         this.email_pessoal = data.email_pessoal;
         this.email_corporativo = data.email_corporativo;
@@ -68,10 +69,12 @@ class Colaborador {
     static async findByEmpresa(id_empresa) {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT * FROM colaborador WHERE id_empresa = ? AND status = "Ativo" ORDER BY nome',
-                [id_empresa]
-            );
+      const [rows] = await pool.execute(
+        'SELECT c.*, e.nome as empresa_nome FROM colaborador c ' +
+        'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
+        'WHERE c.id_empresa = ? AND c.status = "Ativo" ORDER BY c.nome',
+        [id_empresa]
+      );
             return rows.map(row => new Colaborador(row));
         } catch (error) {
             throw new Error(`Erro ao buscar colaboradores da empresa: ${error.message}`);
