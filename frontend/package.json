@@ -2,11 +2,11 @@
   "name": "ezer-dh-frontend",
   "version": "1.0.0",
   "description": "Frontend para Ezer Desenvolvimento Humano",
-  "main": "public/index.html",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'Build process not implemented yet'",
+    "build": "echo 'No build process needed for static HTML/CSS/JS'",
     "test": "echo 'Tests not implemented yet'"
   },
   "keywords": [
@@ -18,13 +18,8 @@
   ],
   "author": "Ezer Desenvolvimento Humano",
   "license": "UNLICENSED",
-  "devDependencies": {
-    "http-server": "^14.1.1"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "express": "^4.18.2",
-    "bootstrap": "^5.3.0",
-    "axios": "^1.4.0",
-    "chart.js": "^4.3.0"
+    "express": "^4.18.2"
   }
 }

@@ -171,8 +171,8 @@ cd frontend && npm start
 │   │   │   ├── footer.html           # Rodapé
 │   │   │   └── cards.html            # Componentes de cards
 │   │   ├── pages/                    # Páginas da aplicação
-│   │   │   ├── login.html            # Página de login
-│   │   │   ├── dashboard.html        # Dashboard principal
+│   │   │   ├── login-minimal.html    # Página de login (minimal)
+│   │   │   ├── dashboard-minimal.html # Dashboard principal (minimal)
 │   │   │   ├── colaboradores.html    # Gestão de colaboradores
 │   │   │   ├── departamentos.html    # Gestão de departamentos
 │   │   │   ├── ocorrencias.html      # Gestão de ocorrências
@@ -182,7 +182,7 @@ cd frontend && npm start
 │   │   │   └── pdi.html              # Gestão de PDI
 │   │   └── utils/                    # Utilitários do frontend
 │   ├── public/                       # Arquivos públicos
-│   │   ├── index.html                # Página principal
+│   │   ├── index-minimal.html        # Página principal (redirecionamento inteligente)
 │   │   ├── css/                      # Estilos CSS
 │   │   ├── js/                       # Scripts JavaScript
 │   │   ├── img/                      # Imagens

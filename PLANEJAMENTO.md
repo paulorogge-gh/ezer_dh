@@ -170,7 +170,7 @@
 
 ## 6. ⏰ Linha do Tempo de Desenvolvimento
 
-### 🔹 Fase 1 – Preparação do Ambiente (Semana 1)
+### 🔹 Fase 1 – Preparação do Ambiente 
 
 **🎯 Objetivo:** Garantir o ambiente de desenvolvimento e a base técnica do projeto.
 
@@ -182,7 +182,7 @@
 - Criar script inicial de execução (npm start / nodemon)
 - Executar script de criação de estrutura de diretórios
 
-### 🔹 Fase 2 – Backend: Base e Modelagem (Semanas 2 e 3)
+### 🔹 Fase 2 – Backend: Base e Modelagem 
 
 **🎯 Objetivo:** Implementar a camada de dados e estrutura principal do backend.
 
@@ -194,7 +194,7 @@
 - Implementar constantes e utilitários (constants.js, logger.js)
 - Testar integridade da base e rotas iniciais
 
-### 🔹 Fase 3 – Backend: Lógica de Negócio e APIs (Semanas 4 a 6)
+### 🔹 Fase 3 – Backend: Lógica de Negócio e APIs 
 
 **🎯 Objetivo:** Criar toda a API REST com controle de acesso e autenticação.
 
@@ -215,7 +215,7 @@
 - Testar todas as rotas com Postman/Insomnia
 - Gerar documentação básica da API (endpoints, parâmetros, retornos)
 
-### 🔹 Fase 4 – Frontend: Estrutura e Layout (Semanas 7 e 8)
+### 🔹 Fase 4 – Frontend: Estrutura e Layout 
 
 **🎯 Objetivo:** Criar as interfaces do sistema e estrutura de navegação.
 
@@ -226,7 +226,7 @@
 - Implementar scripts JS de navegação e autenticação (armazenar token JWT)
 - Criar layout unificado (header/footer fixos, menu lateral se necessário)
 
-### 🔹 Fase 5 – Frontend: Funcionalidades e Integração (Semanas 9 a 10)
+### 🔹 Fase 5 – Frontend: Funcionalidades e Integração 
 
 **🎯 Objetivo:** Integrar frontend com backend via API REST e AJAX.
 
@@ -242,7 +242,7 @@
   - PDI
 - Tratar erros e mensagens de sucesso/erro via modal ou alert
 
-### 🔹 Fase 6 – Testes e Qualidade (Semanas 11 e 12)
+### 🔹 Fase 6 – Testes e Qualidade 
 
 **🎯 Objetivo:** Garantir estabilidade e segurança antes da entrega.
 
@@ -256,7 +256,7 @@
   - Tokens JWT válidos e seguros
 - Correção de bugs e inconsistências
 
-### 🔹 Fase 7 – Documentação e Entrega (Semana 13)
+### 🔹 Fase 7 – Documentação e Entrega 
 
 **🎯 Objetivo:** Finalizar documentação e preparar entrega/hospedagem.
 

@@ -89,8 +89,8 @@ server {
     # Frontend
     location / {
         root /var/www/html/ezer_dh/frontend/public;
-        index index.html;
-        try_files $uri $uri/ /index.html;
+        index index-minimal.html;
+        try_files $uri $uri/ /index-minimal.html;
     }
 
     # API

@@ -20,7 +20,7 @@ const PORT = process.env.PORT_API || 3000;
 // Middlewares de segurança
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
+    origin: true, // Aceitar todas as origens para debug
     credentials: true
 }));
 

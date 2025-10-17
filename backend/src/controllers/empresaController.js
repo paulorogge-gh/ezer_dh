@@ -7,7 +7,9 @@ class EmpresaController {
      */
     static async getAll(req, res) {
         try {
-            const empresas = await Empresa.findAll();
+            const status = (req.query && req.query.status) || undefined;
+            const validStatus = (status === 'Ativo' || status === 'Inativo') ? status : undefined;
+            const empresas = await Empresa.findAll({ status: validStatus });
             
             logDatabase('SELECT', 'empresa', { count: empresas.length });
             
@@ -60,13 +62,38 @@ class EmpresaController {
      */
     static async create(req, res) {
         try {
-            const empresaData = req.body;
-            
+            const body = req.body || {};
+            // Montar dados saneados e garantir null para campos opcionais
+            const empresaData = {
+                nome: body.nome,
+                cnpj: body.cnpj,
+                email: body.email ?? null,
+                telefone: body.telefone ?? null,
+                endereco: body.endereco ?? null,
+                responsavel: body.responsavel ?? null,
+                status: body.status ?? 'Ativo',
+                id_consultoria: null
+            };
+
             // Validação básica
             if (!empresaData.nome || !empresaData.cnpj) {
                 return res.status(400).json({
                     success: false,
                     error: 'Nome e CNPJ são obrigatórios'
+                });
+            }
+
+            // Preencher consultoria a partir do usuário autenticado (fonte de verdade)
+            try {
+                if (req.user && req.user.role === 'consultoria' && req.user.consultoria_id) {
+                    empresaData.id_consultoria = req.user.consultoria_id;
+                }
+            } catch {}
+
+            if (!empresaData.id_consultoria) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Consultoria não identificada para a criação da empresa'
                 });
             }
 
@@ -103,7 +130,7 @@ class EmpresaController {
     static async update(req, res) {
         try {
             const { id } = req.params;
-            const empresaData = req.body;
+            const empresaData = req.body || {};
             
             const empresa = await Empresa.findById(id);
             
@@ -114,7 +141,18 @@ class EmpresaController {
                 });
             }
 
-            await empresa.update(empresaData);
+            // Merge dos dados para evitar undefined nos binds do model
+            const merged = {
+                nome: empresaData.nome ?? empresa.nome,
+                cnpj: empresaData.cnpj ?? empresa.cnpj,
+                email: (empresaData.email ?? empresa.email) ?? null,
+                telefone: (empresaData.telefone ?? empresa.telefone) ?? null,
+                endereco: (empresaData.endereco ?? empresa.endereco) ?? null,
+                responsavel: (empresaData.responsavel ?? empresa.responsavel) ?? null,
+                status: empresaData.status ?? empresa.status
+            };
+
+            await empresa.update(merged);
             const empresaAtualizada = await Empresa.findById(id);
             
             logDatabase('UPDATE', 'empresa', { id });
@@ -273,6 +311,19 @@ class EmpresaController {
                 success: false,
                 error: 'Erro ao buscar estatísticas da empresa'
             });
+        }
+    }
+
+    /**
+     * Contagens globais de empresas (total/ativas/inativas)
+     */
+    static async getGlobalStats(req, res) {
+        try {
+            const counts = await Empresa.getGlobalCounts();
+            return res.json({ success: true, data: counts });
+        } catch (error) {
+            logError(error, req);
+            res.status(500).json({ success: false, error: 'Erro ao obter estatísticas de empresas' });
         }
     }
 }

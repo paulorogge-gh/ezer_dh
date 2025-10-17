@@ -16,14 +16,18 @@ class Empresa {
     }
 
     // Buscar todas as empresas
-    static async findAll() {
+    static async findAll(filters = {}) {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT e.*, c.nome as consultoria_nome FROM empresa e ' +
-                'JOIN consultoria c ON e.id_consultoria = c.id_consultoria ' +
-                'WHERE e.status = "Ativo" ORDER BY e.nome'
-            );
+            const params = [];
+            let sql = 'SELECT e.*, c.nome as consultoria_nome FROM empresa e ' +
+                      'JOIN consultoria c ON e.id_consultoria = c.id_consultoria ';
+            if (filters && filters.status && (filters.status === 'Ativo' || filters.status === 'Inativo')) {
+                sql += 'WHERE e.status = ? ';
+                params.push(filters.status);
+            }
+            sql += 'ORDER BY e.nome';
+            const [rows] = await pool.execute(sql, params);
             return rows.map(row => new Empresa(row));
         } catch (error) {
             throw new Error(`Erro ao buscar empresas: ${error.message}`);
@@ -66,7 +70,16 @@ class Empresa {
             const pool = getPool();
             const [result] = await pool.execute(
                 'INSERT INTO empresa (id_consultoria, nome, cnpj, email, telefone, endereco, responsavel, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [data.id_consultoria, data.nome, data.cnpj, data.email, data.telefone, data.endereco, data.responsavel, data.status || 'Ativo']
+                [
+                    (data.id_consultoria ?? null),
+                    data.nome,
+                    data.cnpj,
+                    (data.email ?? null),
+                    (data.telefone ?? null),
+                    (data.endereco ?? null),
+                    (data.responsavel ?? null),
+                    (data.status ?? 'Ativo')
+                ]
             );
             return result.insertId;
         } catch (error) {
@@ -147,6 +160,24 @@ class Empresa {
             return rows[0].total;
         } catch (error) {
             throw new Error(`Erro ao contar colaboradores: ${error.message}`);
+        }
+    }
+
+    // Contagens globais de empresas
+    static async getGlobalCounts() {
+        try {
+            const pool = getPool();
+            const [rows] = await pool.execute(
+                'SELECT COUNT(*) AS total, SUM(status = "Ativo") AS ativos, SUM(status = "Inativo") AS inativos FROM empresa'
+            );
+            const row = rows && rows[0] ? rows[0] : { total: 0, ativos: 0, inativos: 0 };
+            return {
+                total: Number(row.total || 0),
+                ativos: Number(row.ativos || 0),
+                inativos: Number(row.inativos || 0)
+            };
+        } catch (error) {
+            throw new Error(`Erro ao obter contagens de empresas: ${error.message}`);
         }
     }
 }

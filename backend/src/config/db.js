@@ -19,7 +19,7 @@ const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : { rejectUnauthorized: false },
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

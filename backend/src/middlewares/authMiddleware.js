@@ -19,14 +19,18 @@ const authenticateToken = (req, res, next) => {
 
         // Verificar token
         const decoded = verifyToken(token);
+        // Mapear IDs de referência conforme o role, garantindo compatibilidade
+        const role = decoded.role;
+        const empresaId = decoded.empresa_id || (role === 'empresa' ? decoded.id_referencia : undefined);
+        const consultoriaId = decoded.consultoria_id || (role === 'consultoria' ? decoded.id_referencia : undefined);
         
         // Adicionar dados do usuário ao request
         req.user = {
             id: decoded.id,
             email: decoded.email,
-            role: decoded.role,
-            empresa_id: decoded.empresa_id,
-            consultoria_id: decoded.consultoria_id
+            role: role,
+            empresa_id: empresaId,
+            consultoria_id: consultoriaId
         };
 
         logAuth('token_validated', decoded.id, req.ip);

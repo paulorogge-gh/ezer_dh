@@ -87,4 +87,14 @@ router.get('/:id/stats',
     EmpresaController.getStats
 );
 
+/**
+ * @route   GET /api/empresas/stats
+ * @desc    Contagens globais (total/ativas/inativas)
+ * @access  Private (Consultoria/Empresa leitura)
+ */
+router.get('/stats/global',
+    checkPermission('empresas', 'read'),
+    EmpresaController.getGlobalStats
+);
+
 module.exports = router;
