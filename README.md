@@ -53,6 +53,128 @@ cd frontend && npm start
 - Importação em lote via modelo Excel.
 - Um colaborador pode pertencer a **mais de um departamento**.
 
+---
+
+## 🛠️ Plano de Correções e Padronização (Guia de Execução)
+
+Objetivo: organizar, padronizar e eliminar duplicidades para garantir funcionamento estável e consistente em produção.
+
+### 1) API e Integração
+- [x] Alinhar Base URL em docs com o projeto (Frontend 3000, Backend 3001, base `/api`).
+- [x] Padronizar chamadas protegidas: usar `auth.authenticatedRequest` + `API_CONFIG.BASE_URL` (JWT); manter `EzerAPI` apenas para públicos.
+- [x] Uniformizar respostas `{ success, data, error, message }` nos endpoints principais (Empresas, Colaboradores, Departamentos); ampliar para módulos restantes conforme ativação.
+- [x] `Colaborador.findAll` aceitar `?status=Ativo|Inativo`; padrão “todos” (alinhar com Empresas).
+- [x] Garantir `empresa_nome` em todas as listagens (JOIN consistente), já aplicado em `findAll/findById/findByEmpresa`.
+
+### 2) Backend – Regras e Validações
+- [x] Centralizar normalização de datas (yyyy-mm-dd) e strings (trim) nos controllers.
+- [x] Validar RF024 (Colaboradores) no create/update (já no create): Empresa, CPF, Nome, Data Nascimento, E-mail(s), Telefone, Departamentos, Cargo, Remuneração, Data Admissão, Tipo Contrato.
+- [x] Reconciliação de `departamentos` no update (já aplicada): dif atual vs novo, add/remove com logs.
+- [x] Revisar RBAC nas rotas de associação (add/remove) para apenas Empresa/Consultoria (checagem de mesma empresa + permissão).
+- [x] Aceitar atualização parcial sem falhas por campos ausentes (merge e defaults).
+
+### 3) Frontend – Páginas/Componentes
+- [x] Padronizar includes: `config.js`, `auth.js`, `ui.js`, `alerts.js`, `confirm.js`, `app.js` e script do módulo.
+- [x] Migrar páginas para `minimal.css`; descontinuar `style.css` (migrar o que for necessário, remover o restante).
+- [x] Spinner (`EzerLoading`) em todas as cargas: listagens, modais, ações CRUD (aplicado onde há operações; expandir conforme módulos ganharem listagem padronizada).
+- [x] Ações nas tabelas: Ver/Editar (botões), Inativar/Excluir (ícones-only `.btn-icon`) nas páginas padronizadas (Empresas/Colaboradores); expandindo para demais módulos.
+- [x] Reintroduzir Importação de Colaboradores (RF021) com `auth.authenticatedRequest` + toasts `alerts.js`.
+- [x] KPI cards com `EzerKPI` onde houver estatísticas (padrão Empresas/Colaboradores; aguarda endpoints dos demais módulos).
+- [x] Busca minimalista (ícone + debounce) e evitar DataTables nas novas páginas (manteremos um único padrão).
+
+### 4) Frontend – Formulários e Máscaras
+- [x] Inputs de data com `type="date"`; máscara de data não aplicada a nativos.
+- [x] Converter datas para `yyyy-mm-dd` antes de enviar.
+- [x] Remuneração com máscara BRL e conversão para decimal no submit (já aplicado); formatar visualização com `R$`.
+- [x] Departamentos como checkboxes; enviar `departamentos` no body (backend reconcilia).
+- [x] Validação RF024 no front: aplicar `.is-invalid`/`.checkbox-list.invalid` e focar no primeiro erro.
+
+### 5) UI/UX e Estilos
+- [x] Consolidar componentes globais: `alerts.js` (toasts), `confirm.js`, `showFormModal`, `showInfoModal`.
+- [x] Aplicar `form-grid`, `details-grid`, `kpi-grid`, `.btn-icon`, `.form-select` (seta minimalista) em todas as páginas novas/padronizadas.
+- [x] Modais com `max-height: calc(100vh - 80px)` e `overflow: auto` no corpo.
+- [x] Favicon padrão em todas as páginas.
+
+### 6) Logs e Erros
+- [x] Padronizar mensagens de erro no backend; front sempre exibir `showAlert('error', ...)` (fallback `EzerNotifications`).
+- [x] Logs claros de operações (`logDatabase`, `logError`) em pontos críticos.
+- [x] Verificar `/api/health` e adicionar seção de troubleshooting (README).
+
+### 7) Documentação
+- [x] Atualizar README com fluxos e endpoints reais.
+- [x] Atualizar docs de rotas e RBAC com exemplos de payloads.
+- [x] Documentar `config.js` e variáveis de ambiente esperadas.
+
+### 8) Limpeza
+- [x] Remover referências a IDs antigos em JS (ex.: `searchInput`, `empresaFilter`, `departamentoFilter`) — checadas e removidas; variáveis atuais usam checagens seguras e IDs existentes.
+- [x] Remover duplicidades em `style.css` e manter apenas `minimal.css` — páginas não referenciam `style.css` (mantido apenas para histórico; não é carregado).
+- [x] Padronizar mecanismo de toasts, manter `EzerNotifications` apenas como fallback — ajustado também no `dashboard.js`.
+
+---
+
+## Health Check e Troubleshooting
+
+- Health Check da API: `GET /api/health`
+  - Resposta exemplo:
+  ```json
+  { "status": "OK", "timestamp": "2025-10-18T12:00:00.000Z", "uptime": 123.45, "environment": "development" }
+  ```
+- Problemas comuns e soluções:
+  - Autenticação 401/403: verifique `Authorization: Bearer <token>` e expiração do JWT; se necessário, efetue login novamente.
+  - CORS: conferir cabeçalhos do fetch e origem; backend usa `cors({ origin: true, credentials: true })` em dev.
+  - Banco de dados: se `/api/health` OK porém operações falham, revisar `.env` no backend (host Azure, SSL habilitado). [[memory:8380388]]
+  - Base URL: no frontend, `window.API_CONFIG.BASE_URL` deve apontar para a API correta.
+
+## Configuração do Frontend (config.js)
+
+Exemplo de configuração esperada no `frontend/public/js/config.js`:
+```js
+window.API_CONFIG = {
+  BASE_URL: 'http://localhost:3001/api'
+};
+window.FRONTEND_CONFIG = {
+  LOGIN_PAGE: '/login-minimal',
+  DASHBOARD_URL: '/dashboard-minimal'
+};
+```
+
+## Exemplos de RBAC e Payloads
+
+- Associação de colaborador a departamento (empresa/consultoria):
+  - `POST /api/colaboradores/:id/departamentos`
+  - Body: `{ "departamento_id": 12 }`
+- Remoção de associação:
+  - `DELETE /api/colaboradores/:id/departamentos/:departamento_id`
+- Atualização de colaborador com reconciliação de departamentos:
+  - `PUT /api/colaboradores/:id`
+  - Body (exemplo):
+  ```json
+  {
+    "nome": "João Silva",
+    "id_empresa": 3,
+    "departamentos": [2, 5, 7],
+    "data_nascimento": "1990-05-10",
+    "data_admissao": "2020-01-15",
+    "status": "Ativo"
+  }
+  ```
+
+### 9) Testes
+- [ ] Criar checklist/manual para fluxos principais: Login → Empresas (CRUD) → Colaboradores (CRUD + Departamentos + Importação) → Departamentos.
+- [ ] Testar RBAC por perfil.
+- [ ] Validar formatos de data e moeda fim-a-fim.
+
+---
+
+### ✅ Ordem sugerida de execução
+1. API e integração (authenticatedRequest + API_CONFIG) e documentação.
+2. Backend: normalizações, validações (RF024), reconciliação e RBAC.
+3. Frontend: migração para `minimal.css`, componentes globais e spinner.
+4. Importação de Colaboradores e KPI cards padronizados.
+5. Padronização de tabelas (ações) e barra de busca.
+6. Testes de RBAC e fluxos e correções finais.
+
+
 ### 3. Registro de ocorrências
 - Data da ocorrência.
 - Classificação: **Positivo**, **Negativo** ou **Neutro**.

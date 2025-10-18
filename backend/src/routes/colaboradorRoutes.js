@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ColaboradorController = require('../controllers/colaboradorController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
-const { checkPermission, requireColaboradorOrAbove, checkResourceOwnership } = require('../middlewares/rbacMiddleware');
+const { checkPermission, requireColaboradorOrAbove, requireEmpresaOrConsultoria, checkResourceOwnership } = require('../middlewares/rbacMiddleware');
 
 // Aplicar autenticação em todas as rotas
 router.use(authenticateToken);
@@ -76,6 +76,7 @@ router.get('/:id/departamentos',
  * @access  Private (Empresa/Consultoria)
  */
 router.post('/:id/departamentos',
+    requireEmpresaOrConsultoria,
     checkPermission('colaboradores', 'update'),
     ColaboradorController.addToDepartamento
 );
@@ -86,6 +87,7 @@ router.post('/:id/departamentos',
  * @access  Private (Empresa/Consultoria)
  */
 router.delete('/:id/departamentos/:departamento_id',
+    requireEmpresaOrConsultoria,
     checkPermission('colaboradores', 'update'),
     ColaboradorController.removeFromDepartamento
 );

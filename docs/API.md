@@ -7,7 +7,7 @@ Esta documentação descreve a API REST do Ezer Desenvolvimento Humano.
 ## Base URL
 
 ```
-http://localhost:3000/api/v1
+http://localhost:3001/api
 ```
 
 ## Autenticação

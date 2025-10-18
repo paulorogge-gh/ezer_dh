@@ -141,16 +141,35 @@ const checkDataAccess = async (req, resource) => {
  * Verificar acesso de empresa
  */
 const checkEmpresaAccess = async (req, empresaId) => {
-    // Verificar se o recurso pertence à empresa do usuário
-    const resourceId = req.params.id;
-    
-    if (!resourceId) {
-        return true; // Listagem geral
-    }
+    try {
+        // Verifica se o recurso acessado pertence à mesma empresa do usuário (role empresa)
+        const resourceId = req.params.id;
+        if (!empresaId) return false;
+        if (!resourceId) return true; // em listagens gerais sem id, permitir
 
-    // Implementar verificação específica por recurso
-    // Por enquanto, retornar true
-    return true;
+        // Descobrir recurso pela rota base
+        const basePath = (req.baseUrl || '').toLowerCase();
+        // Se estiver operando sobre colaboradores
+        if (basePath.includes('/colaboradores')) {
+            const { Colaborador } = require('../models');
+            const col = await Colaborador.findById(resourceId);
+            return !!(col && col.id_empresa == empresaId);
+        }
+        // Se estiver operando sobre departamentos
+        if (basePath.includes('/departamentos')) {
+            const { Departamento } = require('../models');
+            const dep = await Departamento.findById(resourceId);
+            return !!(dep && dep.id_empresa == empresaId);
+        }
+        // Se estiver operando sobre empresas
+        if (basePath.includes('/empresas')) {
+            return resourceId == empresaId; // empresa só acessa sua própria
+        }
+        return true;
+    } catch (error) {
+        console.error('Error in checkEmpresaAccess:', error);
+        return false;
+    }
 };
 
 /**

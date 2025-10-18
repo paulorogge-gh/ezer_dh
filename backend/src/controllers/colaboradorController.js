@@ -32,12 +32,7 @@ class ColaboradorController {
             } else if (departamento_id) {
                 colaboradores = await Colaborador.findByDepartamento(departamento_id);
             } else {
-                colaboradores = await Colaborador.findAll();
-            }
-
-            // Filtrar por status se especificado
-            if (status) {
-                colaboradores = colaboradores.filter(c => c.status === status);
+                colaboradores = await Colaborador.findAll({ status: (status === 'Ativo' || status === 'Inativo') ? status : undefined });
             }
             
             logDatabase('SELECT', 'colaborador', { count: colaboradores.length });

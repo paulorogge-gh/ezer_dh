@@ -21,14 +21,17 @@ class Colaborador {
     }
 
     // Buscar todos os colaboradores
-    static async findAll() {
+    static async findAll(filters = {}) {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT c.*, e.nome as empresa_nome FROM colaborador c ' +
-                'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
-                'WHERE c.status = "Ativo" ORDER BY c.nome'
-            );
+            const params = [];
+            let sql = 'SELECT c.*, e.nome as empresa_nome FROM colaborador c JOIN empresa e ON c.id_empresa = e.id_empresa ';
+            if (filters && filters.status && (filters.status === 'Ativo' || filters.status === 'Inativo')) {
+                sql += 'WHERE c.status = ? ';
+                params.push(filters.status);
+            }
+            sql += 'ORDER BY c.nome';
+            const [rows] = await pool.execute(sql, params);
             return rows.map(row => new Colaborador(row));
         } catch (error) {
             throw new Error(`Erro ao buscar colaboradores: ${error.message}`);

@@ -73,6 +73,7 @@ router.get('/:id/colaboradores',
  * @access  Private (Empresa/Consultoria)
  */
 router.post('/:id/colaboradores',
+    requireEmpresaOrConsultoria,
     checkPermission('colaboradores', 'update'),
     DepartamentoController.addColaborador
 );
@@ -83,6 +84,7 @@ router.post('/:id/colaboradores',
  * @access  Private (Empresa/Consultoria)
  */
 router.delete('/:id/colaboradores/:colaborador_id',
+    requireEmpresaOrConsultoria,
     checkPermission('colaboradores', 'update'),
     DepartamentoController.removeColaborador
 );
