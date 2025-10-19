@@ -133,7 +133,33 @@ async function createTables() {
             )
         `);
         console.log('✅ Tabela ocorrencia criada!');
-        
+
+        // Tabela ocorrencia_anexo (índice de anexos)
+        console.log('📊 Criando tabela ocorrencia_anexo...');
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS ocorrencia_anexo (
+                id_anexo INT AUTO_INCREMENT PRIMARY KEY,
+                id_ocorrencia INT NOT NULL,
+                url VARCHAR(1024) NOT NULL,
+                nome_arquivo VARCHAR(512) NOT NULL,
+                content_type VARCHAR(128),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (id_ocorrencia) REFERENCES ocorrencia(id_ocorrencia) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ Tabela ocorrencia_anexo criada!');
+        // Índices de ocorrencia_anexo
+        try {
+            await pool.execute('CREATE INDEX idx_ocorrencia_anexo_ocorrencia ON ocorrencia_anexo(id_ocorrencia)');
+        } catch (error) {
+            if (error.code !== 'ER_DUP_KEYNAME') console.log('⚠️  Índice idx_ocorrencia_anexo_ocorrencia já existe ou houve erro');
+        }
+        try {
+            await pool.execute('CREATE INDEX idx_ocorrencia_anexo_url ON ocorrencia_anexo(url(255))');
+        } catch (error) {
+            if (error.code !== 'ER_DUP_KEYNAME') console.log('⚠️  Índice idx_ocorrencia_anexo_url já existe ou houve erro');
+        }
+
         // Tabela treinamento
         console.log('📊 Criando tabela treinamento...');
         await pool.execute(`

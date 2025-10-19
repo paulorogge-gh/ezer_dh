@@ -13,6 +13,7 @@ const consultoriaRoutes = require('./routes/consultoria');
 const empresaRoutes = require('./routes/empresaRoutes');
 const departamentoRoutes = require('./routes/departamentoRoutes');
 const colaboradorRoutes = require('./routes/colaboradorRoutes');
+const ocorrenciaRoutes = require('./routes/ocorrenciaRoutes');
 
 const app = express();
 const PORT = process.env.PORT_API || 3000;
@@ -65,6 +66,7 @@ app.use('/api/consultoria', consultoriaRoutes);
 app.use('/api/empresas', empresaRoutes);
 app.use('/api/departamentos', departamentoRoutes);
 app.use('/api/colaboradores', colaboradorRoutes);
+app.use('/api/ocorrencias', ocorrenciaRoutes);
 
 // Middleware de tratamento de erros
 app.use(errorHandler);

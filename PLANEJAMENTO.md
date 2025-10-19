@@ -276,3 +276,4 @@
 - Pesquisas internas (clima, satisfação, engajamento)
 - Relatórios exportáveis (PDF, Excel)
 - Notificações por e-mail e integração com Microsoft 365
+

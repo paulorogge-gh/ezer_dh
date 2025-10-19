@@ -187,6 +187,7 @@ CREATE TABLE pdi (
     FOREIGN KEY (id_colaborador) REFERENCES colaborador(id_colaborador) ON DELETE CASCADE
 );
 
+
 -- ==================================================
 -- Índices adicionais para otimização
 -- ==================================================
