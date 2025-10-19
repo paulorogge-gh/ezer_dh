@@ -106,8 +106,8 @@ class Colaborador {
         try {
             const pool = getPool();
             await pool.execute(
-                'UPDATE colaborador SET nome = ?, data_nascimento = ?, email_pessoal = ?, email_corporativo = ?, telefone = ?, cargo = ?, remuneracao = ?, data_admissao = ?, tipo_contrato = ?, status = ? WHERE id_colaborador = ?',
-                [data.nome, data.data_nascimento, data.email_pessoal, data.email_corporativo, data.telefone, data.cargo, data.remuneracao, data.data_admissao, data.tipo_contrato, data.status, this.id_colaborador]
+                'UPDATE colaborador SET id_empresa = ?, nome = ?, data_nascimento = ?, email_pessoal = ?, email_corporativo = ?, telefone = ?, cargo = ?, remuneracao = ?, data_admissao = ?, tipo_contrato = ?, status = ? WHERE id_colaborador = ?',
+                [data.id_empresa, data.nome, data.data_nascimento, data.email_pessoal, data.email_corporativo, data.telefone, data.cargo, data.remuneracao, data.data_admissao, data.tipo_contrato, data.status, this.id_colaborador]
             );
             return true;
         } catch (error) {

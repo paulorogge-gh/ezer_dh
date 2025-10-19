@@ -127,9 +127,15 @@ class ColaboradorController {
 
             const colaboradorId = await Colaborador.create(payload);
             const colaborador = await Colaborador.findById(colaboradorId);
-            // Associar departamentos
+            // Associar departamentos (validando que pertencem à mesma empresa)
             try {
+                // Buscar departamentos por empresa selecionada para validação
+                const empresaDeps = await Departamento.findByEmpresa(payload.id_empresa);
+                const empresaDepIds = new Set((empresaDeps || []).map(d => d.id_departamento));
                 for (const depId of departamentos) {
+                    if (!empresaDepIds.has(Number(depId))) {
+                        throw new Error('Departamento não pertence à empresa selecionada');
+                    }
                     await colaborador.addDepartamento(depId);
                 }
             } catch (e) {
@@ -201,7 +207,19 @@ class ColaboradorController {
             await colaborador.update(merged);
             const colaboradorAtualizado = await Colaborador.findById(id);
             
-            // Sincronizar departamentos se enviados
+            // Se a empresa foi alterada, remover todos os departamentos atuais
+            try {
+                const empresaFoiAlterada = body.hasOwnProperty('id_empresa') && Number(body.id_empresa) !== colaborador.id_empresa;
+                if (empresaFoiAlterada) {
+                    const depsAtuais = await colaboradorAtualizado.getDepartamentos();
+                    const idsAtuais = (depsAtuais || []).map(d => d.id_departamento);
+                    for (const depId of idsAtuais) {
+                        await colaboradorAtualizado.removeDepartamento(depId);
+                    }
+                }
+            } catch (e) { logError(e, req); }
+
+            // Sincronizar departamentos se enviados (validando empresa)
             if (Array.isArray(body.departamentos)) {
                 try {
                     const atuais = await colaborador.getDepartamentos();
@@ -209,8 +227,16 @@ class ColaboradorController {
                     const novos = body.departamentos.map(Number).filter(Boolean);
                     const toAdd = novos.filter(x => !atuaisIds.includes(x));
                     const toRemove = atuaisIds.filter(x => !novos.includes(x));
+                    // Validar que todos os novos pertencem à empresa do colaborador
+                    const empresaDeps = await Departamento.findByEmpresa(colaboradorAtualizado.id_empresa);
+                    const empresaDepIds = new Set((empresaDeps || []).map(d => d.id_departamento));
+                    for (const depId of toAdd) {
+                        if (!empresaDepIds.has(Number(depId))) {
+                            throw new Error('Departamento não pertence à empresa selecionada');
+                        }
+                        await colaborador.addDepartamento(depId);
+                    }
                     for (const depId of toRemove) { await colaborador.removeDepartamento(depId); }
-                    for (const depId of toAdd) { await colaborador.addDepartamento(depId); }
                 } catch (e) { logError(e, req); }
             }
 
@@ -336,6 +362,10 @@ class ColaboradorController {
                 });
             }
 
+            // Validar empresa
+            if (departamento.id_empresa !== colaborador.id_empresa) {
+                return res.status(400).json({ success: false, error: 'Departamento não pertence à empresa do colaborador' });
+            }
             await colaborador.addDepartamento(departamento_id);
             
             logDatabase('INSERT', 'colaborador_departamento', { colaborador_id: id, departamento_id });
