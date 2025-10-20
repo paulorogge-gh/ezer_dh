@@ -14,6 +14,8 @@ const empresaRoutes = require('./routes/empresaRoutes');
 const departamentoRoutes = require('./routes/departamentoRoutes');
 const colaboradorRoutes = require('./routes/colaboradorRoutes');
 const ocorrenciaRoutes = require('./routes/ocorrenciaRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+const liderRoutes = require('./routes/liderRoutes');
 
 const app = express();
 const PORT = process.env.PORT_API || 3000;
@@ -67,6 +69,8 @@ app.use('/api/empresas', empresaRoutes);
 app.use('/api/departamentos', departamentoRoutes);
 app.use('/api/colaboradores', colaboradorRoutes);
 app.use('/api/ocorrencias', ocorrenciaRoutes);
+app.use('/api/feedbacks', feedbackRoutes);
+app.use('/api/lideres', liderRoutes);
 
 // Middleware de tratamento de erros
 app.use(errorHandler);

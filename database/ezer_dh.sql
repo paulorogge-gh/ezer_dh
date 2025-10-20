@@ -105,6 +105,37 @@ CREATE TABLE colaborador_departamento (
 );
 
 -- ==================================================
+-- 7. Líderes e Relacionamentos (Gestão de líderes e liderados)
+-- ==================================================
+CREATE TABLE lider (
+    id_lider INT AUTO_INCREMENT PRIMARY KEY,
+    id_empresa INT NOT NULL,
+    id_colaborador INT NOT NULL,
+    status ENUM('Ativo','Inativo') DEFAULT 'Ativo',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_lider_colaborador (id_colaborador),
+    FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa) ON DELETE CASCADE,
+    FOREIGN KEY (id_colaborador) REFERENCES colaborador(id_colaborador) ON DELETE CASCADE
+);
+
+CREATE TABLE lider_membro (
+    id_lider INT NOT NULL,
+    id_liderado INT NOT NULL,
+    PRIMARY KEY (id_lider, id_liderado),
+    FOREIGN KEY (id_lider) REFERENCES lider(id_lider) ON DELETE CASCADE,
+    FOREIGN KEY (id_liderado) REFERENCES colaborador(id_colaborador) ON DELETE CASCADE
+);
+
+CREATE TABLE lider_departamento (
+    id_lider INT NOT NULL,
+    id_departamento INT NOT NULL,
+    PRIMARY KEY (id_lider, id_departamento),
+    FOREIGN KEY (id_lider) REFERENCES lider(id_lider) ON DELETE CASCADE,
+    FOREIGN KEY (id_departamento) REFERENCES departamento(id_departamento) ON DELETE CASCADE
+);
+
+-- ==================================================
 -- 7. Ocorrência
 -- ==================================================
 CREATE TABLE ocorrencia (

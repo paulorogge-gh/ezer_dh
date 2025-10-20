@@ -53,6 +53,67 @@ cd frontend && npm start
 - Importação em lote via modelo Excel.
 - Um colaborador pode pertencer a **mais de um departamento**.
 
+### 2.1. Gestão de Líderes e Liderados (novo módulo)
+
+Este módulo permite definir líderes por empresa, gerenciar seus liderados e os departamentos que supervisionam, com interações via modais e atualização dinâmica no frontend (fetch/AJAX), seguindo o layout minimalista existente.
+
+- Seleção de Empresa: filtro por empresa e controle de permissões de acesso.
+- Definição de Líder: um colaborador ativo da empresa pode ser definido como líder.
+- Gerenciamento de Liderados: adicionar/remover liderados do líder.
+- Gerenciamento de Departamentos: vincular/desvincular departamentos ao líder.
+
+Estrutura de banco de dados:
+
+```
+lider (id_lider PK, id_empresa FK->empresa, id_colaborador FK->colaborador, status, created_at, updated_at)
+lider_membro (id_lider FK->lider, id_liderado FK->colaborador, PK composto)
+lider_departamento (id_lider FK->lider, id_departamento FK->departamento, PK composto)
+```
+
+Rotas da API (todas autenticadas, respostas JSON padronizadas):
+
+- GET `/api/lideres?empresa_id=ID&status=Ativo|Inativo` — listar líderes (opcionalmente por empresa/status)
+- GET `/api/lideres/:id` — detalhes de um líder
+- POST `/api/lideres` — criar líder
+  - Body: `{ "id_empresa": number, "id_colaborador": number, "status": "Ativo"|"Inativo" }`
+- PUT `/api/lideres/:id` — atualizar líder (status e/ou colaborador)
+  - Body: `{ "id_empresa"?: number, "id_colaborador"?: number, "status"?: "Ativo"|"Inativo" }`
+- DELETE `/api/lideres/:id` — excluir líder
+- GET `/api/lideres/:id/membros` — listar liderados
+- POST `/api/lideres/:id/membros` — adicionar liderado
+  - Body: `{ "liderado_id": number }`
+- DELETE `/api/lideres/:id/membros/:liderado_id` — remover liderado
+- GET `/api/lideres/:id/departamentos` — listar departamentos do líder
+- POST `/api/lideres/:id/departamentos` — adicionar departamento ao líder
+  - Body: `{ "departamento_id": number }`
+- DELETE `/api/lideres/:id/departamentos/:departamento_id` — remover departamento do líder
+
+Permissões (RBAC):
+
+- `consultoria`: create/read/update/delete em `lideres`.
+- `empresa`: create/read/update/delete em `lideres` da própria empresa.
+- `colaborador`: read (leitura) onde aplicável.
+
+Frontend:
+
+- Página `frontend/public/lideres.html` e script `frontend/public/js/lideres.js`.
+- Filtro por empresa, busca por nome do líder, ações na lista: Ver, Editar, Gerenciar Liderados, Gerenciar Departamentos, Excluir.
+- Modais:
+  - Novo Líder: seleção de empresa e colaborador ativo da empresa.
+  - Gerenciar Liderados: lista atual, seleção e adição de novos, remoção individual.
+  - Gerenciar Departamentos: lista atual, seleção e adição de novos, remoção individual.
+
+Validações importantes:
+
+- Só é possível definir como líder um colaborador da mesma empresa.
+- Liderados precisam pertencer à mesma empresa do líder e não podem ser o próprio líder.
+- Departamentos vinculados devem pertencer à mesma empresa do líder.
+
+Logs:
+
+- Operações críticas registradas via `logDatabase` e `logError` (inserções/remoções em `lider`, `lider_membro`, `lider_departamento`).
+
+
 ---
 
 ## 🛠️ Plano de Correções e Padronização (Guia de Execução)

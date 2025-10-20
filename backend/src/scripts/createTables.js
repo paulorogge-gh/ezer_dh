@@ -116,6 +116,49 @@ async function createTables() {
         `);
         console.log('✅ Tabela colaborador_departamento criada!');
         
+        // Tabela lider
+        console.log('📊 Criando tabela lider...');
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS lider (
+                id_lider INT AUTO_INCREMENT PRIMARY KEY,
+                id_empresa INT NOT NULL,
+                id_colaborador INT NOT NULL,
+                status ENUM('Ativo','Inativo') DEFAULT 'Ativo',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_lider_colaborador (id_colaborador),
+                FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa) ON DELETE CASCADE,
+                FOREIGN KEY (id_colaborador) REFERENCES colaborador(id_colaborador) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ Tabela lider criada!');
+
+        // Tabela lider_membro
+        console.log('📊 Criando tabela lider_membro...');
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS lider_membro (
+                id_lider INT NOT NULL,
+                id_liderado INT NOT NULL,
+                PRIMARY KEY (id_lider, id_liderado),
+                FOREIGN KEY (id_lider) REFERENCES lider(id_lider) ON DELETE CASCADE,
+                FOREIGN KEY (id_liderado) REFERENCES colaborador(id_colaborador) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ Tabela lider_membro criada!');
+
+        // Tabela lider_departamento
+        console.log('📊 Criando tabela lider_departamento...');
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS lider_departamento (
+                id_lider INT NOT NULL,
+                id_departamento INT NOT NULL,
+                PRIMARY KEY (id_lider, id_departamento),
+                FOREIGN KEY (id_lider) REFERENCES lider(id_lider) ON DELETE CASCADE,
+                FOREIGN KEY (id_departamento) REFERENCES departamento(id_departamento) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ Tabela lider_departamento criada!');
+
         // Tabela ocorrencia
         console.log('📊 Criando tabela ocorrencia...');
         await pool.execute(`
@@ -304,6 +347,17 @@ async function createTables() {
             ('admin@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'empresa', 1),
             ('maria.santos@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'colaborador', 1),
             ('pedro.oliveira@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'colaborador', 2)
+        `);
+
+        // Inserir líder de exemplo e relações
+        await pool.execute(`
+            INSERT IGNORE INTO lider (id_empresa, id_colaborador, status) VALUES (1, 1, 'Ativo')
+        `);
+        await pool.execute(`
+            INSERT IGNORE INTO lider_membro (id_lider, id_liderado) VALUES (1, 2)
+        `);
+        await pool.execute(`
+            INSERT IGNORE INTO lider_departamento (id_lider, id_departamento) VALUES (1, 1)
         `);
         
         console.log('✅ Dados de exemplo inseridos!');

@@ -100,6 +100,11 @@ app.get('/departamentos', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'departamentos.html'));
 });
 
+// Rota para líderes
+app.get('/lideres', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'lideres.html'));
+});
+
 // Rota para treinamentos
 app.get('/treinamentos', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'treinamentos.html'));

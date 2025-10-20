@@ -14,6 +14,7 @@ const PERMISSIONS = {
         feedbacks: ['create', 'read', 'update', 'delete'],
         avaliacoes: ['create', 'read', 'update', 'delete'],
         pdi: ['create', 'read', 'update', 'delete'],
+        lideres: ['create', 'read', 'update', 'delete'],
         consultoria: ['read', 'update']
     },
     empresa: {
@@ -25,7 +26,8 @@ const PERMISSIONS = {
         treinamentos: ['create', 'read', 'update', 'delete'],
         feedbacks: ['create', 'read', 'update', 'delete'],
         avaliacoes: ['create', 'read', 'update', 'delete'],
-        pdi: ['create', 'read', 'update', 'delete']
+        pdi: ['create', 'read', 'update', 'delete'],
+        lideres: ['create', 'read', 'update', 'delete']
     },
     colaborador: {
         // Acesso limitado aos próprios dados e de colegas
@@ -35,7 +37,8 @@ const PERMISSIONS = {
         treinamentos: ['read'], // Apenas próprios treinamentos
         feedbacks: ['create', 'read'], // Pode dar e receber feedbacks
         avaliacoes: ['read'], // Apenas próprias avaliações
-        pdi: ['read', 'update'] // Pode atualizar próprio PDI
+        pdi: ['read', 'update'], // Pode atualizar próprio PDI
+        lideres: ['read']
     }
 };
 
@@ -164,6 +167,14 @@ const checkEmpresaAccess = async (req, empresaId) => {
         // Se estiver operando sobre empresas
         if (basePath.includes('/empresas')) {
             return resourceId == empresaId; // empresa só acessa sua própria
+        }
+        // Se estiver operando sobre líderes
+        if (basePath.includes('/lideres')) {
+            try {
+                const { Lider } = require('../models');
+                const lider = await Lider.findById(resourceId);
+                return !!(lider && lider.id_empresa == empresaId);
+            } catch (e) { return false; }
         }
         return true;
     } catch (error) {
