@@ -107,17 +107,21 @@ class Empresa {
         }
     }
 
-    // Deletar empresa (soft delete)
+    // Deletar empresa (hard delete)
     async delete() {
         try {
             const pool = getPool();
             await pool.execute(
-                'UPDATE empresa SET status = "Inativo" WHERE id_empresa = ?',
+                'DELETE FROM empresa WHERE id_empresa = ?',
                 [this.id_empresa]
             );
             return true;
         } catch (error) {
-            throw new Error(`Erro ao deletar empresa: ${error.message}`);
+            // Tratar violação de chave estrangeira (MySQL)
+            if (error && (error.code === 'ER_ROW_IS_REFERENCED' || error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451)) {
+                throw new Error('Não é possível excluir: existem registros vinculados (colaboradores, departamentos, ocorrências, feedbacks, etc.)');
+            }
+            throw new Error(`Erro ao excluir empresa: ${error.message}`);
         }
     }
 

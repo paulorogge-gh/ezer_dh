@@ -54,6 +54,32 @@ cd frontend && npm start
 - Um colaborador pode pertencer a **mais de um departamento**.
 
 ### 2.1. Gestão de Líderes e Liderados (novo módulo)
+### 2.2. Gerenciamento de Usuários (RBAC)
+
+Módulo para administração das contas de acesso com controle estrito por RBAC, seguindo o planejamento (RF001–RF005, RBAC/RB). Permite consultar/criar/atualizar/excluir usuários com tipos: `consultoria`, `empresa`, `colaborador`.
+
+Banco:
+- Tabela `usuario` (já existente): `id_usuario`, `email` (único), `senha` (bcrypt), `tipo_usuario` (`consultoria|empresa|colaborador`), `id_referencia`, `status`, `ultimo_login`, `tentativas_login`, `bloqueado_ate`.
+
+API:
+- GET `/api/usuarios?empresa_id&tipo_usuario&status` — Lista (consultoria: todos; empresa: escopo da própria; colaborador: apenas próprio)
+- GET `/api/usuarios/:id` — Detalhe (restrito ao escopo)
+- POST `/api/usuarios` — Criar (consultoria/empresa)
+- PUT `/api/usuarios/:id` — Atualizar (consultoria/empresa; colaborador apenas próprio e sem alterar status)
+- PATCH `/api/usuarios/:id/status` — Alterar status (consultoria/empresa)
+- POST `/api/usuarios/:id/reset-password` — Reset de senha (consultoria/empresa)
+- DELETE `/api/usuarios/:id` — Excluir (consultoria/empresa)
+
+RBAC:
+- `consultoria`: CRUD completo em `usuarios`.
+- `empresa`: CRUD em `usuarios` do seu escopo (usuários tipo `empresa` da própria e `colaborador` da própria empresa).
+- `colaborador`: leitura do próprio e atualização limitada (e-mail/senha).
+
+Frontend:
+- Página `frontend/public/usuarios.html` + script `frontend/public/js/usuarios.js`.
+- Filtros: Empresa, Tipo, Status; busca por e-mail; ações: criar, editar, reset de senha, alterar status, excluir.
+- Navegação adicionada na sidebar.
+
 
 Este módulo permite definir líderes por empresa, gerenciar seus liderados e os departamentos que supervisionam, com interações via modais e atualização dinâmica no frontend (fetch/AJAX), seguindo o layout minimalista existente.
 

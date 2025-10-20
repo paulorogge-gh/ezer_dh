@@ -201,7 +201,7 @@ class EmpresaController {
             
             res.json({
                 success: true,
-                message: 'Empresa deletada com sucesso'
+                message: 'Empresa excluída permanentemente com sucesso'
             });
         } catch (error) {
             logError(error, req);

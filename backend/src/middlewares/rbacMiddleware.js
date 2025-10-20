@@ -15,6 +15,7 @@ const PERMISSIONS = {
         avaliacoes: ['create', 'read', 'update', 'delete'],
         pdi: ['create', 'read', 'update', 'delete'],
         lideres: ['create', 'read', 'update', 'delete'],
+        usuarios: ['create', 'read', 'update', 'delete'],
         consultoria: ['read', 'update']
     },
     empresa: {
@@ -27,7 +28,8 @@ const PERMISSIONS = {
         feedbacks: ['create', 'read', 'update', 'delete'],
         avaliacoes: ['create', 'read', 'update', 'delete'],
         pdi: ['create', 'read', 'update', 'delete'],
-        lideres: ['create', 'read', 'update', 'delete']
+        lideres: ['create', 'read', 'update', 'delete'],
+        usuarios: ['create', 'read', 'update', 'delete']
     },
     colaborador: {
         // Acesso limitado aos próprios dados e de colegas
@@ -38,7 +40,8 @@ const PERMISSIONS = {
         feedbacks: ['create', 'read'], // Pode dar e receber feedbacks
         avaliacoes: ['read'], // Apenas próprias avaliações
         pdi: ['read', 'update'], // Pode atualizar próprio PDI
-        lideres: ['read']
+        lideres: ['read'],
+        usuarios: ['read']
     }
 };
 
@@ -174,6 +177,23 @@ const checkEmpresaAccess = async (req, empresaId) => {
                 const { Lider } = require('../models');
                 const lider = await Lider.findById(resourceId);
                 return !!(lider && lider.id_empresa == empresaId);
+            } catch (e) { return false; }
+        }
+        // Se estiver operando sobre usuários
+        if (basePath.includes('/usuarios')) {
+            try {
+                const { Usuario, Colaborador, Empresa } = require('../models');
+                const usuario = await Usuario.findById(resourceId);
+                if (!usuario) return true; // listagem sem id já foi tratada acima
+                if (usuario.tipo_usuario === 'empresa') {
+                    return usuario.id_referencia == empresaId;
+                }
+                if (usuario.tipo_usuario === 'colaborador') {
+                    const col = await Colaborador.findById(usuario.id_referencia);
+                    return !!(col && col.id_empresa == empresaId);
+                }
+                // consultoria não pertence a empresa
+                return false;
             } catch (e) { return false; }
         }
         return true;

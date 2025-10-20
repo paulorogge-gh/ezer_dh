@@ -125,6 +125,11 @@ app.get('/pdi', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'pdi.html'));
 });
 
+// Rota para Usuários
+app.get('/usuarios', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'usuarios.html'));
+});
+
 // Rota para login minimalista
 app.get('/login-minimal', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login-minimal.html'));
