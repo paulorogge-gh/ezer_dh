@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -19,7 +20,7 @@ const liderRoutes = require('./routes/liderRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 
 const app = express();
-const PORT = process.env.PORT_API || 3000;
+const PORT = process.env.PORT || process.env.PORT_API || 3000;
 
 // Middlewares de segurança
 app.use(helmet());
@@ -73,6 +74,38 @@ app.use('/api/ocorrencias', ocorrenciaRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/lideres', liderRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+
+// Servir frontend estático (public)
+const publicDir = path.join(__dirname, '..', '..', 'frontend', 'public');
+app.use(express.static(publicDir));
+
+// Rotas públicas (SPA estática)
+const publicRoutes = [
+    '/dashboard-minimal',
+    '/login-minimal',
+    '/empresas',
+    '/departamentos',
+    '/colaboradores',
+    '/ocorrencias',
+    '/feedbacks',
+    '/lideres',
+    '/pdi',
+    '/treinamentos',
+    '/avaliacoes',
+    '/usuarios'
+];
+
+publicRoutes.forEach(route => {
+    app.get(route, (req, res) => {
+        const fileName = route.replace('/', '') + '.html';
+        res.sendFile(path.join(publicDir, fileName));
+    });
+});
+
+// Rota raiz opcional para dashboard
+app.get(['/app', '/home'], (req, res) => {
+    res.sendFile(path.join(publicDir, 'dashboard-minimal.html'));
+});
 
 // Middleware de tratamento de erros
 app.use(errorHandler);
