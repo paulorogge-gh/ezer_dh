@@ -54,14 +54,18 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Rota principal
+// Rota principal: redirecionar para login minimal
 app.get('/', (req, res) => {
-    res.json({
-        message: 'Ezer Desenvolvimento Humano - API',
-        version: '1.0.0',
-        status: 'running',
-        documentation: '/api/health'
-    });
+    try {
+        return res.redirect('/login-minimal');
+    } catch (e) {
+        res.json({
+            message: 'Ezer Desenvolvimento Humano - API',
+            version: '1.0.0',
+            status: 'running',
+            documentation: '/api/health'
+        });
+    }
 });
 
 // Rotas da API
@@ -75,24 +79,28 @@ app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/lideres', liderRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 
-// Em produção: servir frontend estático a partir de frontend/public
+// Servir frontend estático a partir de frontend/public (sempre)
 try {
     const path = require('path');
-    const isProd = (process.env.NODE_ENV || '').toLowerCase() === 'production';
-    if (isProd) {
-        const frontendPublic = path.join(__dirname, '../../frontend/public');
-        app.use(express.static(frontendPublic));
-        // fallback para SPA-like: mapear rotas conhecidas
-        const knownPages = [
-            'login-minimal.html','dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html','test-auth.html'
-        ];
-        knownPages.forEach(page => {
-            const route = `/${page.replace('.html','')}`;
-            app.get(route, (req, res) => {
-                res.sendFile(path.join(frontendPublic, page));
-            });
+    const frontendPublic = path.join(__dirname, '../../frontend/public');
+    app.use(express.static(frontendPublic));
+    // Mapear rotas conhecidas sem extensão para páginas .html
+    const knownPages = [
+        'login-minimal.html','dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html','test-auth.html'
+    ];
+    knownPages.forEach(page => {
+        const route = `/${page.replace('.html','')}`;
+        app.get(route, (req, res) => {
+            res.sendFile(path.join(frontendPublic, page));
         });
-    }
+    });
+    // Favicon e robots healthcheck
+    app.get('/favicon.ico', (req, res) => {
+        try { res.sendFile(path.join(frontendPublic, 'favicon.svg')); } catch { res.status(204).end(); }
+    });
+    app.get('/robots933456.txt', (req, res) => {
+        res.type('text/plain').send('');
+    });
 } catch(e) { /* noop */ }
 
 // Middleware de tratamento de erros

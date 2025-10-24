@@ -101,7 +101,7 @@ Rotas da API (todas autenticadas, respostas JSON padronizadas):
 - GET `/api/lideres?empresa_id=ID&status=Ativo|Inativo` — listar líderes (opcionalmente por empresa/status)
 - GET `/api/lideres/:id` — detalhes de um líder
 - POST `/api/lideres` — criar líder
-  - Body: `{ "id_empresa": number, "id_colaborador": number, "status": "Ativo"|"Inativo" }`
+  - Body: `{ "id_empresa": number, "id_colaborador":git add . number, "status": "Ativo"|"Inativo" }`
 - PUT `/api/lideres/:id` — atualizar líder (status e/ou colaborador)
   - Body: `{ "id_empresa"?: number, "id_colaborador"?: number, "status"?: "Ativo"|"Inativo" }`
 - DELETE `/api/lideres/:id` — excluir líder
