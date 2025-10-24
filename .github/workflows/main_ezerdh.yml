@@ -28,8 +28,10 @@ jobs:
           npm ci
           cd backend && npm ci
           cd ../frontend && npm ci
+          cd ..
 
       - name: Ensure frontend assets are mirrored into backend/public/site
+        working-directory: ${{ github.workspace }}
         run: |
           rm -rf backend/public/site
           mkdir -p backend/public/site
