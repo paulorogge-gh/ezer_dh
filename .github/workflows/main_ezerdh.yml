@@ -29,6 +29,11 @@ jobs:
           cd backend && npm ci
           cd ../frontend && npm ci
 
+      - name: Ensure frontend assets are mirrored into backend/public/site
+        run: |
+          mkdir -p backend/public/site
+          rsync -av --delete frontend/public/ backend/public/site/
+
       - name: Create deployment package (zip)
         run: |
           rm -f app.zip

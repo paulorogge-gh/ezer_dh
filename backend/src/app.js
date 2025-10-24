@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 
 const { testConnection } = require('./config/db');
 const { logRequest, errorHandler } = require('./utils/logger');
@@ -22,7 +23,14 @@ const usuarioRoutes = require('./routes/usuarioRoutes');
 const app = express();
 // Azure Web App fornece PORT; mantenha PORT_API como fallback local
 const PORT = process.env.PORT || process.env.PORT_API || 3000;
-const FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
+const DEFAULT_FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
+const BACKEND_SITE_PUBLIC = path.join(__dirname, 'public/site');
+const FRONTEND_PUBLIC = (function() {
+    const configured = process.env.FRONTEND_PUBLIC_DIR || DEFAULT_FRONTEND_PUBLIC;
+    try { if (fs.existsSync(configured)) return configured; } catch {}
+    try { if (fs.existsSync(BACKEND_SITE_PUBLIC)) return BACKEND_SITE_PUBLIC; } catch {}
+    return configured;
+})();
 
 // Middlewares de segurança
 app.use(helmet());
@@ -56,10 +64,16 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Rota principal: servir login minimal diretamente
+// Rota principal: servir login minimal diretamente (com fallback)
 app.get('/', (req, res) => {
+    const loginFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
     try {
-        return res.sendFile(path.join(FRONTEND_PUBLIC, 'login-minimal.html'));
+        if (fs.existsSync(loginFile)) {
+            return res.sendFile(loginFile, (err) => {
+                if (err) return res.redirect('/login-minimal');
+            });
+        }
+        return res.redirect('/login-minimal');
     } catch (e) {
         return res.redirect('/login-minimal');
     }
@@ -78,7 +92,9 @@ app.use('/api/usuarios', usuarioRoutes);
 
 // Servir frontend estático a partir de frontend/public (sempre)
 try {
-    app.use(express.static(FRONTEND_PUBLIC));
+    if (fs.existsSync(FRONTEND_PUBLIC)) {
+        app.use(express.static(FRONTEND_PUBLIC));
+    }
     // Mapear rotas conhecidas sem extensão para páginas .html
     const knownPages = [
         'login-minimal.html','dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html','test-auth.html'
@@ -86,7 +102,13 @@ try {
     knownPages.forEach(page => {
         const route = `/${page.replace('.html','')}`;
         app.get(route, (req, res) => {
-            res.sendFile(path.join(FRONTEND_PUBLIC, page));
+            const pageFile = path.join(FRONTEND_PUBLIC, page);
+            if (fs.existsSync(pageFile)) {
+                return res.sendFile(pageFile, (err) => {
+                    if (err) return res.redirect('/login-minimal');
+                });
+            }
+            return res.redirect('/login-minimal');
         });
     });
     // Favicon e robots healthcheck
@@ -98,7 +120,13 @@ try {
     });
     // Catch-all: se não encontrado, servir login
     app.get('*', (req, res) => {
-        try { return res.sendFile(path.join(FRONTEND_PUBLIC, 'login-minimal.html')); } catch { return res.redirect('/login-minimal'); }
+        const fallbackFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
+        if (fs.existsSync(fallbackFile)) {
+            return res.sendFile(fallbackFile, (err) => {
+                if (err) return res.redirect('/login-minimal');
+            });
+        }
+        return res.redirect('/login-minimal');
     });
 } catch(e) { /* noop */ }
 
