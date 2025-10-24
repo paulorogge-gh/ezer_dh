@@ -6,72 +6,69 @@ const app = express();
 const PORT = 3000;
 
 // ==================================================
-// SISTEMA DE GERENCIAMENTO DE SESSÕES
+// SESSÃO (SIMPLIFICADA)
 // ==================================================
-const SESSION_FILE = path.join(__dirname, 'sessions.json');
-const SERVER_RESTART_FLAG = path.join(__dirname, 'server_restart.flag');
+// Utiliza apenas cookie simples 'ezer_session=1' para proteção de páginas privadas
 
-// Carregar sessões existentes
-let activeSessions = {};
-try {
-    if (fs.existsSync(SESSION_FILE)) {
-        const data = fs.readFileSync(SESSION_FILE, 'utf8');
-        activeSessions = JSON.parse(data);
-        console.log(`📊 Sessões carregadas: ${Object.keys(activeSessions).length}`);
-    }
-} catch (error) {
-    console.log('⚠️ Erro ao carregar sessões:', error.message);
-    activeSessions = {};
-}
+// ==================================================
+// GUARDA DE ROTAS PARA ARQUIVOS .html PRIVADOS
+// ==================================================
+const PRIVATE_HTML_PAGES = new Set([
+  'dashboard-minimal.html', 'usuarios.html', 'empresas.html', 'departamentos.html', 'colaboradores.html', 'ocorrencias.html', 'lideres.html', 'treinamentos.html', 'feedbacks.html', 'avaliacoes.html', 'pdi.html'
+]);
 
-// Função para salvar sessões
-function saveSessions() {
-    try {
-        fs.writeFileSync(SESSION_FILE, JSON.stringify(activeSessions, null, 2));
-    } catch (error) {
-        console.error('❌ Erro ao salvar sessões:', error.message);
-    }
-}
-
-// Função para limpar todas as sessões
-function clearAllSessions() {
-    console.log('🔄 Limpando todas as sessões ativas...');
-    activeSessions = {};
-    saveSessions();
-    
-    // Criar flag de reinicialização do servidor
-    try {
-        fs.writeFileSync(SERVER_RESTART_FLAG, JSON.stringify({
-            timestamp: new Date().toISOString(),
-            message: 'Servidor reiniciado - todas as sessões foram encerradas'
-        }));
-    } catch (error) {
-        console.error('❌ Erro ao criar flag de reinicialização:', error.message);
-    }
-}
-
-// Middleware para verificar flag de reinicialização
 app.use((req, res, next) => {
-    if (fs.existsSync(SERVER_RESTART_FLAG)) {
-        // Servidor foi reiniciado, limpar flag e forçar logout
-        try {
-            fs.unlinkSync(SERVER_RESTART_FLAG);
-        } catch (error) {
-            console.error('❌ Erro ao remover flag:', error.message);
-        }
-        
-        // Adicionar header para forçar logout no frontend
-        res.setHeader('X-Server-Restart', 'true');
+  try {
+    const reqPath = req.path;
+    // Bloquear acesso direto a .html se for página privada
+    if (reqPath.endsWith('.html')) {
+      const baseName = path.basename(reqPath);
+      if (PRIVATE_HTML_PAGES.has(baseName) && !isAuthenticatedRequest(req)) {
+        return res.redirect('/login-minimal');
+      }
     }
-    next();
+  } catch (e) {}
+  next();
 });
 
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rota principal - servir index-minimal.html (redirecionamento inteligente)
+// ==================================================
+// GUARDA DE ROTAS NO FRONTEND (apenas páginas privadas)
+// ==================================================
+const PRIVATE_PATHS = new Set([
+  '/dashboard-minimal', '/usuarios', '/empresas', '/departamentos', '/colaboradores', '/ocorrencias', '/lideres', '/treinamentos', '/feedbacks', '/avaliacoes', '/pdi'
+]);
+// incluir páginas utilitárias
+PRIVATE_PATHS.add('/perfil');
+PRIVATE_PATHS.add('/configuracoes');
+
+function isAuthenticatedRequest(req) {
+  try {
+    const authHeader = req.headers['authorization'] || '';
+    const hasBearer = authHeader.toLowerCase().startsWith('bearer ');
+    const cookie = req.headers['cookie'] || '';
+    const hasSessionCookie = /ezer_session=1/.test(cookie);
+    return hasBearer || hasSessionCookie;
+  } catch { return false; }
+}
+
+app.use((req, res, next) => {
+  try {
+    const pathName = req.path;
+    if (PRIVATE_PATHS.has(pathName)) {
+      if (!isAuthenticatedRequest(req)) {
+        return res.redirect('/login-minimal');
+      }
+    }
+  } catch {}
+  next();
+});
+
+// Rota principal - redirecionar imediatamente para login
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index-minimal.html'));
+    res.redirect('/login-minimal');
 });
 
 // Rota para login (redireciona para login minimalista)
@@ -145,6 +142,14 @@ app.get('/test-auth', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'test-auth.html'));
 });
 
+// Rotas utilitárias
+app.get('/perfil', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'perfil.html'));
+});
+app.get('/configuracoes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'configuracoes.html'));
+});
+
 // Rota para verificar status do servidor (retorna header X-Server-Restart se aplicável)
 app.get('/server-status', (req, res) => {
     res.json({ ok: true, timestamp: new Date().toISOString() });
@@ -173,13 +178,9 @@ const server = app.listen(PORT, () => {
 function gracefulShutdown(signal) {
     console.log(`\n🔄 Recebido sinal ${signal}. Encerrando servidor...`);
     
-    // Limpar todas as sessões ativas
-    clearAllSessions();
-    
     // Fechar servidor
     server.close(() => {
         console.log('✅ Servidor encerrado graciosamente');
-        console.log('🔐 Todas as sessões foram encerradas');
         process.exit(0);
     });
     
@@ -198,15 +199,10 @@ process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // Para nodemon
 // Capturar erros não tratados
 process.on('uncaughtException', (error) => {
     console.error('💥 Erro não tratado:', error);
-    clearAllSessions();
     process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('💥 Promise rejeitada não tratada:', reason);
-    clearAllSessions();
     process.exit(1);
 });
-
-// Limpar sessões ao iniciar (caso o servidor tenha sido reiniciado)
-clearAllSessions();

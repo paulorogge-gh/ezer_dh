@@ -10,6 +10,7 @@ USE ezer_dh;
 -- ==================================================
 CREATE TABLE usuario (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255),
     email VARCHAR(255) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
     tipo_usuario ENUM('consultoria','empresa','colaborador') NOT NULL,
@@ -178,7 +179,6 @@ CREATE TABLE feedback (
     data DATE NOT NULL,
     classificacao ENUM('Positivo','Para Melhorar','Neutro') NOT NULL,
     observacoes TEXT,
-    tipo_feedback ENUM('Liderado','360º') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_avaliador) REFERENCES colaborador(id_colaborador) ON DELETE CASCADE,

@@ -8,7 +8,7 @@ class Feedback {
         this.data = data.data;
         this.classificacao = data.classificacao;
         this.observacoes = data.observacoes;
-        this.tipo_feedback = data.tipo_feedback;
+        // tipo_feedback removido da estrutura
         this.created_at = data.created_at;
         this.updated_at = data.updated_at;
     }
@@ -25,7 +25,6 @@ class Feedback {
                   DATE_FORMAT(f.data, "%Y-%m-%d") AS data,
                   f.classificacao,
                   f.observacoes,
-                  f.tipo_feedback,
                   f.created_at,
                   f.updated_at,
                   c1.nome AS avaliador_nome,
@@ -56,7 +55,6 @@ class Feedback {
                   DATE_FORMAT(f.data, "%Y-%m-%d") AS data,
                   f.classificacao,
                   f.observacoes,
-                  f.tipo_feedback,
                   f.created_at,
                   f.updated_at,
                   c1.nome AS avaliador_nome,
@@ -92,7 +90,7 @@ class Feedback {
     }
 
     // Filtro agregado
-    static async findFiltered({ empresa_id, classificacao, tipo_feedback, data_inicio, data_fim, q }) {
+    static async findFiltered({ empresa_id, classificacao, data_inicio, data_fim, q }) {
         try {
             const pool = getPool();
             const where = [];
@@ -105,7 +103,6 @@ class Feedback {
                   DATE_FORMAT(f.data, "%Y-%m-%d") AS data,
                   f.classificacao,
                   f.observacoes,
-                  f.tipo_feedback,
                   f.created_at,
                   f.updated_at,
                   c1.nome AS avaliador_nome,
@@ -119,7 +116,7 @@ class Feedback {
             `;
             if (empresa_id) { where.push('e.id_empresa = ?'); params.push(empresa_id); }
             if (classificacao) { where.push('f.classificacao = ?'); params.push(classificacao); }
-            if (tipo_feedback) { where.push('f.tipo_feedback = ?'); params.push(tipo_feedback); }
+            // tipo_feedback removido
             if (data_inicio && data_fim) { where.push('f.data BETWEEN ? AND ?'); params.push(data_inicio, data_fim); }
             if (q) { where.push('(c1.nome LIKE ? OR c2.nome LIKE ?)'); params.push(`%${q}%`, `%${q}%`); }
             if (where.length) sql += ' WHERE ' + where.join(' AND ');
@@ -148,22 +145,7 @@ class Feedback {
     }
 
     // Buscar feedbacks por tipo
-    static async findByTipo(tipo_feedback) {
-        try {
-            const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT f.*, c1.nome as avaliador_nome, c2.nome as avaliado_nome, e.nome as empresa_nome FROM feedback f ' +
-                'JOIN colaborador c1 ON f.id_avaliador = c1.id_colaborador ' +
-                'JOIN colaborador c2 ON f.id_avaliado = c2.id_colaborador ' +
-                'JOIN empresa e ON c2.id_empresa = e.id_empresa ' +
-                'WHERE f.tipo_feedback = ? ORDER BY f.data DESC',
-                [tipo_feedback]
-            );
-            return rows.map(row => new Feedback(row));
-        } catch (error) {
-            throw new Error(`Erro ao buscar feedbacks por tipo: ${error.message}`);
-        }
-    }
+    // findByTipo removido
 
     // Buscar feedbacks por classificação
     static async findByClassificacao(classificacao) {
@@ -188,8 +170,8 @@ class Feedback {
         try {
             const pool = getPool();
             const [result] = await pool.execute(
-                'INSERT INTO feedback (id_avaliador, id_avaliado, data, classificacao, observacoes, tipo_feedback) VALUES (?, ?, ?, ?, ?, ?)',
-                [data.id_avaliador, data.id_avaliado, data.data, data.classificacao, data.observacoes, data.tipo_feedback]
+                'INSERT INTO feedback (id_avaliador, id_avaliado, data, classificacao, observacoes) VALUES (?, ?, ?, ?, ?)',
+                [data.id_avaliador, data.id_avaliado, data.data, data.classificacao, data.observacoes]
             );
             return result.insertId;
         } catch (error) {
@@ -202,8 +184,8 @@ class Feedback {
         try {
             const pool = getPool();
             await pool.execute(
-                'UPDATE feedback SET data = ?, classificacao = ?, observacoes = ?, tipo_feedback = ? WHERE id_feedback = ?',
-                [data.data, data.classificacao, data.observacoes, data.tipo_feedback, this.id_feedback]
+                'UPDATE feedback SET data = ?, classificacao = ?, observacoes = ? WHERE id_feedback = ?',
+                [data.data, data.classificacao, data.observacoes, this.id_feedback]
             );
             return true;
         } catch (error) {

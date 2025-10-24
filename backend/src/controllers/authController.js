@@ -59,7 +59,7 @@ class AuthController {
                 });
             }
 
-            // Buscar dados completos do usuário
+            // Buscar dados completos do usuário (para contexto adicional)
             const dadosCompletos = await user.getDadosCompletos();
             
             // Gerar tokens
@@ -67,7 +67,8 @@ class AuthController {
                 id: user.id_usuario,
                 email: user.email,
                 role: user.tipo_usuario,
-                id_referencia: user.id_referencia
+                empresa_id: (user.tipo_usuario === 'empresa' || user.tipo_usuario === 'colaborador') ? (user.id_empresa ?? null) : null,
+                consultoria_id: (user.tipo_usuario === 'consultoria') ? (user.id_referencia ?? null) : null
             };
 
             const accessToken = generateToken(tokenPayload);
@@ -84,11 +85,13 @@ class AuthController {
                 data: {
                     user: {
                         id: user.id_usuario,
-                        nome: dadosCompletos.nome,
+                        nome: user.nome || dadosCompletos?.nome || null,
                         email: user.email,
                         role: user.tipo_usuario,
-                        empresa: dadosCompletos.empresa_nome || null,
-                        consultoria: dadosCompletos.consultoria_nome || null
+                        id_empresa: (user.id_empresa ?? null),
+                        id_consultoria: (user.tipo_usuario === 'consultoria' ? user.id_referencia ?? null : null),
+                        empresa: dadosCompletos?.empresa_nome || null,
+                        consultoria: dadosCompletos?.consultoria_nome || null
                     },
                     accessToken,
                     refreshToken,
@@ -155,12 +158,13 @@ class AuthController {
                 });
             }
 
-            // Gerar novo access token
+            // Gerar novo access token (alinhado ao login)
             const tokenPayload = {
                 id: user.id_usuario,
                 email: user.email,
                 role: user.tipo_usuario,
-                id_referencia: user.id_referencia
+                empresa_id: (user.tipo_usuario === 'empresa' || user.tipo_usuario === 'colaborador') ? (user.id_empresa ?? null) : null,
+                consultoria_id: (user.tipo_usuario === 'consultoria') ? (user.id_referencia ?? null) : null
             };
 
             const newAccessToken = generateToken(tokenPayload);
@@ -205,11 +209,11 @@ class AuthController {
                 success: true,
                 data: {
                     id: user.id_usuario,
-                    nome: dadosCompletos.nome,
+                    nome: user.nome || dadosCompletos?.nome || null,
                     email: user.email,
                     role: user.tipo_usuario,
-                    empresa: dadosCompletos.empresa_nome || null,
-                    consultoria: dadosCompletos.consultoria_nome || null,
+                    empresa: dadosCompletos?.empresa_nome || null,
+                    consultoria: dadosCompletos?.consultoria_nome || null,
                     created_at: user.created_at
                 }
             });

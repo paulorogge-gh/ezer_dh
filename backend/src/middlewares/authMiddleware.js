@@ -21,8 +21,8 @@ const authenticateToken = (req, res, next) => {
         const decoded = verifyToken(token);
         // Mapear IDs de referência conforme o role, garantindo compatibilidade
         const role = decoded.role;
-        const empresaId = decoded.empresa_id || (role === 'empresa' ? decoded.id_referencia : undefined);
-        const consultoriaId = decoded.consultoria_id || (role === 'consultoria' ? decoded.id_referencia : undefined);
+        const empresaId = decoded.empresa_id || undefined;
+        const consultoriaId = decoded.consultoria_id || undefined;
         
         // Adicionar dados do usuário ao request
         req.user = {

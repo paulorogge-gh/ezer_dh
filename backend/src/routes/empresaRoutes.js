@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const EmpresaController = require('../controllers/empresaController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
-const { checkPermission, requireEmpresaOrConsultoria } = require('../middlewares/rbacMiddleware');
+const { checkPermission, requireEmpresaOrConsultoria, requireConsultoria } = require('../middlewares/rbacMiddleware');
 
 // Aplicar autenticação em todas as rotas
 router.use(authenticateToken);
@@ -13,7 +13,7 @@ router.use(authenticateToken);
  * @access  Private (Consultoria)
  */
 router.get('/', 
-    checkPermission('empresas', 'read'),
+    requireConsultoria,
     EmpresaController.getAll
 );
 

@@ -5,7 +5,7 @@ const { getPool } = require('../config/db');
 class FeedbackController {
   static async getAll(req, res) {
     try {
-      const { empresa_id, classificacao, tipo_feedback, periodo, data_inicio: qi, data_fim: qf, q } = req.query;
+      const { empresa_id, classificacao, periodo, data_inicio: qi, data_fim: qf, q } = req.query;
       let data_inicio = null; let data_fim = null;
       if (qi && qf) { data_inicio = String(qi).slice(0,10); data_fim = String(qf).slice(0,10); }
       if (periodo && (!qi || !qf)) {
@@ -32,8 +32,24 @@ class FeedbackController {
           data_fim = end.toISOString().slice(0,10);
         }
       }
-      const list = (empresa_id || classificacao || tipo_feedback || data_inicio || data_fim || q)
-        ? await Feedback.findFiltered({ empresa_id, classificacao, tipo_feedback, data_inicio, data_fim, q })
+      // Escopo: se usuário for empresa ou colaborador, forçar filtro pela sua empresa
+      let forcedEmpresaId = null;
+      try {
+        const role = req.user?.role;
+        if (role === 'empresa') {
+          forcedEmpresaId = (req.user?.empresa_id || req.user?.id_empresa || req.user?.id_referencia) || null;
+        } else if (role === 'colaborador') {
+          const idRef = req.user?.id_referencia || null;
+          if (idRef) {
+            const pool = getPool();
+            const [rows] = await pool.execute('SELECT id_empresa FROM colaborador WHERE id_colaborador = ?', [idRef]);
+            if (rows && rows[0] && rows[0].id_empresa) forcedEmpresaId = rows[0].id_empresa;
+          }
+        }
+      } catch {}
+      const finalEmpresaId = forcedEmpresaId || empresa_id;
+      const list = (finalEmpresaId || classificacao || data_inicio || data_fim || q)
+        ? await Feedback.findFiltered({ empresa_id: finalEmpresaId, classificacao, data_inicio, data_fim, q })
         : await Feedback.findAll();
       logDatabase('SELECT', 'feedback', { count: list.length });
       res.json({ success: true, data: list, count: list.length });
@@ -59,16 +75,14 @@ class FeedbackController {
   static async create(req, res) {
     try {
       const body = req.body || {};
-      const required = ['id_avaliado', 'data', 'classificacao', 'tipo_feedback'];
+      const required = ['id_avaliado', 'data', 'classificacao'];
       for (const k of required) { if (!body[k] && body[k] !== 0) return res.status(400).json({ success: false, error: `Campo obrigatório ausente: ${k}` }); }
       // Avaliador é o usuário autenticado (se possível)
       const user = req.user || {};
       body.id_avaliador = body.id_avaliador || user.id_colaborador || user.id_referencia || null;
       // Regra de acesso: líder só para liderados; colaborador 360º para colegas/ líder do(s) departamento(s)
       // Colaborador não pode criar tipo 'Liderado'
-      if ((req.user?.role === 'colaborador') && String(body.tipo_feedback || '').toLowerCase() === 'liderado'.toLowerCase()) {
-        return res.status(403).json({ success: false, error: 'Sem permissão para criar feedback do tipo Liderado' });
-      }
+      // Regra sem distinção de tipo
       try {
         const pool = getPool();
         // empresa do avaliado

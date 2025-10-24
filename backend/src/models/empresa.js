@@ -20,11 +20,19 @@ class Empresa {
         try {
             const pool = getPool();
             const params = [];
+            let where = [];
             let sql = 'SELECT e.*, c.nome as consultoria_nome FROM empresa e ' +
                       'JOIN consultoria c ON e.id_consultoria = c.id_consultoria ';
             if (filters && filters.status && (filters.status === 'Ativo' || filters.status === 'Inativo')) {
-                sql += 'WHERE e.status = ? ';
+                where.push('e.status = ?');
                 params.push(filters.status);
+            }
+            if (filters && filters.consultoria_id) {
+                where.push('e.id_consultoria = ?');
+                params.push(filters.consultoria_id);
+            }
+            if (where.length) {
+                sql += 'WHERE ' + where.join(' AND ') + ' ';
             }
             sql += 'ORDER BY e.nome';
             const [rows] = await pool.execute(sql, params);

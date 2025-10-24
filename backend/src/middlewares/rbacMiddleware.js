@@ -186,7 +186,7 @@ const checkEmpresaAccess = async (req, empresaId) => {
                 const usuario = await Usuario.findById(resourceId);
                 if (!usuario) return true; // listagem sem id já foi tratada acima
                 if (usuario.tipo_usuario === 'empresa') {
-                    return usuario.id_referencia == empresaId;
+                    return usuario.id_empresa == empresaId;
                 }
                 if (usuario.tipo_usuario === 'colaborador') {
                     const col = await Colaborador.findById(usuario.id_referencia);

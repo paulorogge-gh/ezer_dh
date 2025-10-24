@@ -4,10 +4,12 @@ const bcrypt = require('bcryptjs');
 class Usuario {
     constructor(data) {
         this.id_usuario = data.id_usuario;
+        this.nome = data.nome; 
         this.email = data.email;
         this.senha = data.senha;
         this.tipo_usuario = data.tipo_usuario;
         this.id_referencia = data.id_referencia;
+        this.id_empresa = data.id_empresa;
         this.status = data.status;
         this.ultimo_login = data.ultimo_login;
         this.tentativas_login = data.tentativas_login;
@@ -26,15 +28,17 @@ class Usuario {
         const senhaHash = await bcrypt.hash(usuarioData.senha, 12);
         
         const sql = `
-            INSERT INTO usuario (email, senha, tipo_usuario, id_referencia, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO usuario (email, nome, senha, tipo_usuario, id_referencia, id_empresa, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
         
         const values = [
             usuarioData.email,
+            usuarioData.nome || null,
             senhaHash,
             usuarioData.tipo_usuario,
             usuarioData.id_referencia,
+            usuarioData.id_empresa || null,
             usuarioData.status || 'Ativo'
         ];
         
@@ -127,6 +131,11 @@ class Usuario {
         
         const fields = [];
         const values = [];
+        
+        if (updateData.nome) {
+            fields.push('nome = ?');
+            values.push(updateData.nome);
+        }
         
         if (updateData.email) {
             fields.push('email = ?');
@@ -264,7 +273,7 @@ class Usuario {
                     SELECT u.*, e.nome, e.cnpj, e.telefone, e.status as status_empresa,
                            c.nome as consultoria_nome
                     FROM usuario u
-                    JOIN empresa e ON e.id_empresa = u.id_referencia
+                    JOIN empresa e ON e.id_empresa = u.id_empresa
                     JOIN consultoria c ON c.id_consultoria = e.id_consultoria
                     WHERE u.id_usuario = ?
                 `;

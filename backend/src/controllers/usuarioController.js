@@ -7,16 +7,22 @@ class UsuarioController {
 
     static async getAll(req, res) {
         try {
-            const { tipo_usuario, status, empresa_id } = req.query || {};
+            const { tipo_usuario, status, empresa_id: empresaIdQuery } = req.query || {};
+            let empresa_id = empresaIdQuery;
+            try {
+                if (req.user && (req.user.role === 'empresa' || req.user.role === 'colaborador')) {
+                    empresa_id = req.user.empresa_id || empresa_id;
+                }
+            } catch {}
             const pool = getPool();
             const params = [];
             let sql = `SELECT u.* FROM usuario u`;
-            // Filtro por empresa: inclui usuários tipo 'empresa' com id_referencia=empresa_id e tipo 'colaborador' cujo colaborador pertence à empresa
+            // Filtro por empresa: inclui usuários tipo 'empresa' com id_empresa=empresa_id e tipo 'colaborador' cujo colaborador pertence à empresa
             if (empresa_id) {
                 sql = `
                     SELECT u.*
                     FROM usuario u
-                    WHERE (u.tipo_usuario = 'empresa' AND u.id_referencia = ?) OR (
+                    WHERE (u.tipo_usuario = 'empresa' AND u.id_empresa = ?) OR (
                         u.tipo_usuario = 'colaborador' AND u.id_referencia IN (
                             SELECT c.id_colaborador FROM colaborador c WHERE c.id_empresa = ?
                         )
@@ -54,7 +60,24 @@ class UsuarioController {
             const { id } = req.params;
             const user = await Usuario.findById(id);
             if (!user) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
-            // Se colaborador, ocultar hash
+            // Escopo: empresa/colaborador só acessam usuários da própria empresa
+            try {
+                if (req.user && (req.user.role === 'empresa' || req.user.role === 'colaborador')) {
+                    const myEmpresaId = Number(req.user.empresa_id || 0);
+                    if (user.tipo_usuario === 'empresa') {
+                        if (Number(user.id_empresa) !== myEmpresaId) {
+                            return res.status(403).json({ success: false, error: 'Acesso negado a usuário de outra empresa' });
+                        }
+                    } else if (user.tipo_usuario === 'colaborador') {
+                        const col = await Colaborador.findById(user.id_referencia);
+                        if (!col || Number(col.id_empresa) !== myEmpresaId) {
+                            return res.status(403).json({ success: false, error: 'Acesso negado a usuário de outra empresa' });
+                        }
+                    } else if (user.tipo_usuario === 'consultoria') {
+                        return res.status(403).json({ success: false, error: 'Acesso negado a usuário de consultoria' });
+                    }
+                }
+            } catch {}
             res.json({ success: true, data: user.toSafeObject() });
         } catch (error) {
             logError(error, req);
@@ -65,39 +88,56 @@ class UsuarioController {
     static async create(req, res) {
         try {
             const body = req.body || {};
-            const payload = {
-                email: UsuarioController.sanitize(body.email),
-                senha: UsuarioController.sanitize(body.senha),
-                tipo_usuario: UsuarioController.sanitize(body.tipo_usuario),
-                id_referencia: Number(body.id_referencia),
-                status: (body.status === 'Inativo') ? 'Inativo' : 'Ativo'
-            };
+            const email = UsuarioController.sanitize(body.email);
+            const nome = UsuarioController.sanitize(body.nome);
+            const senha = UsuarioController.sanitize(body.senha);
+            const tipo_usuario = UsuarioController.sanitize(body.tipo_usuario);
+            const status = (body.status === 'Inativo') ? 'Inativo' : 'Ativo';
+            const empresa_id = body.empresa_id ? Number(body.empresa_id) : null;
+            const colaborador_id = body.colaborador_id ? Number(body.colaborador_id) : null;
+
             const missing = [];
-            if (!payload.email) missing.push('E-mail');
-            if (!payload.senha) missing.push('Senha');
-            if (!payload.tipo_usuario) missing.push('Tipo de Usuário');
-            if (!payload.id_referencia) missing.push('Referência');
+            if (!email) missing.push('E-mail');
+            if (!senha || String(senha).length < 6) missing.push('Senha');
+            if (!tipo_usuario) missing.push('Tipo de Usuário');
             if (missing.length) return res.status(400).json({ success: false, error: `Campos obrigatórios: ${missing.join(', ')}` });
-            if (!['consultoria','empresa','colaborador'].includes(payload.tipo_usuario)) {
+            if (!['consultoria','empresa','colaborador'].includes(tipo_usuario)) {
                 return res.status(400).json({ success: false, error: 'Tipo de usuário inválido' });
             }
-            // Validar referência existente e escopo do solicitante
-            if (payload.tipo_usuario === 'consultoria') {
-                const c = await Consultoria.findById ? Consultoria.findById(payload.id_referencia) : null;
-                if (!c) return res.status(400).json({ success: false, error: 'Consultoria de referência inválida' });
-            } else if (payload.tipo_usuario === 'empresa') {
-                const e = await Empresa.findById(payload.id_referencia);
-                if (!e) return res.status(400).json({ success: false, error: 'Empresa de referência inválida' });
-                if (req.user.role === 'empresa' && Number(req.user.empresa_id) !== Number(e.id_empresa)) {
+
+            let id_referencia = null;
+            let id_empresa_to_save = null;
+            if (tipo_usuario === 'consultoria') {
+                if (req.user && req.user.role === 'consultoria' && req.user.consultoria_id) {
+                    id_referencia = Number(req.user.consultoria_id);
+                } else {
+                    return res.status(400).json({ success: false, error: 'Consultoria não identificada para criação de usuário' });
+                }
+            } else if (tipo_usuario === 'empresa') {
+                if (!empresa_id) return res.status(400).json({ success: false, error: 'Empresa é obrigatória para usuário do tipo empresa' });
+                const e = await Empresa.findById(empresa_id);
+                if (!e) return res.status(400).json({ success: false, error: 'Empresa inválida' });
+                if (req.user && req.user.role === 'empresa' && Number(req.user.empresa_id) !== Number(empresa_id)) {
                     return res.status(403).json({ success: false, error: 'Sem permissão para criar usuário de outra empresa' });
                 }
-            } else if (payload.tipo_usuario === 'colaborador') {
-                const col = await Colaborador.findById(payload.id_referencia);
-                if (!col) return res.status(400).json({ success: false, error: 'Colaborador de referência inválido' });
-                if (req.user.role === 'empresa' && Number(req.user.empresa_id) !== Number(col.id_empresa)) {
+                id_referencia = Number(empresa_id);
+                id_empresa_to_save = Number(empresa_id);
+            } else if (tipo_usuario === 'colaborador') {
+                if (!empresa_id) return res.status(400).json({ success: false, error: 'Empresa é obrigatória para usuário do tipo colaborador' });
+                if (!colaborador_id) return res.status(400).json({ success: false, error: 'Colaborador é obrigatório para usuário do tipo colaborador' });
+                const col = await Colaborador.findById(colaborador_id);
+                if (!col) return res.status(400).json({ success: false, error: 'Colaborador inválido' });
+                if (Number(col.id_empresa) !== Number(empresa_id)) {
+                    return res.status(400).json({ success: false, error: 'Colaborador não pertence à empresa selecionada' });
+                }
+                if (req.user && req.user.role === 'empresa' && Number(req.user.empresa_id) !== Number(empresa_id)) {
                     return res.status(403).json({ success: false, error: 'Sem permissão para criar usuário de outra empresa' });
                 }
+                id_referencia = Number(colaborador_id);
+                id_empresa_to_save = Number(empresa_id);
             }
+
+            const payload = { email, nome, senha, tipo_usuario, id_referencia, id_empresa: id_empresa_to_save, status };
             const id = await Usuario.create(payload);
             logDatabase('INSERT', 'usuario', { id });
             res.status(201).json({ success: true, data: { id_usuario: id }, message: 'Usuário criado com sucesso' });
@@ -121,6 +161,7 @@ class UsuarioController {
                 return res.status(403).json({ success: false, error: 'Sem permissão' });
             }
             const updateData = {};
+            if (body.nome) updateData.nome = UsuarioController.sanitize(body.nome);
             if (body.email) updateData.email = UsuarioController.sanitize(body.email);
             if (body.senha) updateData.senha = UsuarioController.sanitize(body.senha);
             if (body.status) updateData.status = (body.status === 'Inativo') ? 'Inativo' : 'Ativo';

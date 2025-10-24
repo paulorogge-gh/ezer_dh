@@ -1,5 +1,5 @@
 const { Empresa } = require('../models');
-const { logDatabase, logError } = require('../utils/logger');
+const { logDatabase, logError, logAuth } = require('../utils/logger');
 
 class EmpresaController {
     /**
@@ -9,7 +9,9 @@ class EmpresaController {
         try {
             const status = (req.query && req.query.status) || undefined;
             const validStatus = (status === 'Ativo' || status === 'Inativo') ? status : undefined;
-            const empresas = await Empresa.findAll({ status: validStatus });
+            // Consultoria: filtrar apenas empresas da própria consultoria
+            const consultoriaId = (req.user && req.user.consultoria_id) ? req.user.consultoria_id : undefined;
+            const empresas = await Empresa.findAll({ status: validStatus, consultoria_id: consultoriaId });
             
             logDatabase('SELECT', 'empresa', { count: empresas.length });
             
@@ -141,6 +143,30 @@ class EmpresaController {
                 });
             }
 
+            // Bloquear inativação e garantir escopo para role empresa
+            try {
+                const userRole = req.user && req.user.role;
+                const userEmpresaId = req.user && req.user.empresa_id;
+                if (userRole === 'empresa') {
+                    // Empresa só pode alterar a própria empresa
+                    if (String(id) !== String(userEmpresaId)) {
+                        logAuth('empresa_update_denied', req.user.id, req.ip, { targetEmpresaId: id });
+                        return res.status(403).json({
+                            success: false,
+                            error: 'Acesso negado: empresa só pode alterar seus próprios dados'
+                        });
+                    }
+                    // Empresa não pode inativar a própria empresa
+                    if (typeof empresaData.status === 'string' && empresaData.status.toLowerCase() === 'inativo') {
+                        logAuth('empresa_inactivation_blocked', req.user.id, req.ip, { targetEmpresaId: id });
+                        return res.status(403).json({
+                            success: false,
+                            error: 'Perfis Empresa não podem inativar a própria empresa'
+                        });
+                    }
+                }
+            } catch (e) { /* noop */ }
+
             // Merge dos dados para evitar undefined nos binds do model
             const merged = {
                 nome: empresaData.nome ?? empresa.nome,
@@ -186,6 +212,17 @@ class EmpresaController {
         try {
             const { id } = req.params;
             
+            // Defesa adicional: bloquear exclusão por role empresa
+            try {
+                if (req.user && req.user.role === 'empresa') {
+                    logAuth('empresa_delete_denied', req.user.id, req.ip, { targetEmpresaId: id });
+                    return res.status(403).json({
+                        success: false,
+                        error: 'Perfis Empresa não podem excluir empresas'
+                    });
+                }
+            } catch (e) { /* noop */ }
+
             const empresa = await Empresa.findById(id);
             
             if (!empresa) {
