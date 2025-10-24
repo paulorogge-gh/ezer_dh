@@ -19,7 +19,8 @@ const liderRoutes = require('./routes/liderRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 
 const app = express();
-const PORT = process.env.PORT_API || 3000;
+// Azure Web App fornece PORT; mantenha PORT_API como fallback local
+const PORT = process.env.PORT || process.env.PORT_API || 3000;
 
 // Middlewares de segurança
 app.use(helmet());
@@ -74,6 +75,26 @@ app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/lideres', liderRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 
+// Em produção: servir frontend estático a partir de frontend/public
+try {
+    const path = require('path');
+    const isProd = (process.env.NODE_ENV || '').toLowerCase() === 'production';
+    if (isProd) {
+        const frontendPublic = path.join(__dirname, '../../frontend/public');
+        app.use(express.static(frontendPublic));
+        // fallback para SPA-like: mapear rotas conhecidas
+        const knownPages = [
+            'login-minimal.html','dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html','test-auth.html'
+        ];
+        knownPages.forEach(page => {
+            const route = `/${page.replace('.html','')}`;
+            app.get(route, (req, res) => {
+                res.sendFile(path.join(frontendPublic, page));
+            });
+        });
+    }
+} catch(e) { /* noop */ }
+
 // Middleware de tratamento de erros
 app.use(errorHandler);
 
@@ -94,7 +115,7 @@ async function startServer() {
             console.log('\n🚀 ================================================');
             console.log('   EZER DESENVOLVIMENTO HUMANO - API');
             console.log('🚀 ================================================');
-            console.log(`🌐 Servidor rodando em: http://localhost:${PORT}`);
+            console.log(`🌐 Servidor rodando em porta: ${PORT}`);
             console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
             console.log(`🔧 Ambiente: ${process.env.NODE_ENV || 'development'}`);
             console.log(`⏰ Iniciado em: ${new Date().toLocaleString('pt-BR')}`);

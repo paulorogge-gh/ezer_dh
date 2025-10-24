@@ -457,6 +457,57 @@ Observação: o banco de dados do projeto é hospedado no Azure; nunca instale o
 
 ---
 
+## 🚀 Deploy Automático (GitHub → Azure Web App)
+
+Este projeto está pronto para deploy contínuo no Azure Web App a partir do GitHub.
+
+### Pré-requisitos
+- Um App Service (Azure Web App) criado (Linux) com stack Node.js.
+- Publicação via perfil de publicação (Publish Profile) e Secrets configurados no GitHub.
+
+### 1) Configurar Secrets no GitHub
+No repositório GitHub, acesse Settings → Secrets and variables → Actions → New repository secret, e adicione:
+- `AZURE_WEBAPP_NAME`: Nome do seu Web App (ex.: `ezer-dh-webapp-prod`).
+- `AZURE_WEBAPP_PUBLISH_PROFILE`: Conteúdo do Publish Profile (XML) obtido no Azure Portal: Web App → Get publish profile.
+
+### 2) Workflow de Deploy
+O arquivo `/.github/workflows/azure-webapp.yml` já está adicionado. Ele:
+- Faz checkout do código.
+- Instala dependências no root, `backend` e `frontend`.
+- Cria um artefato `.zip` e publica no Azure Web App.
+
+Branch de deploy: `main`. A cada push na `main`, o Azure fará o deploy automaticamente.
+
+### 3) App Settings no Azure (Configurações de Aplicativo)
+No seu Web App (Azure Portal → Configuration → Application settings), adicione as seguintes chaves:
+- `WEBSITE_NODE_DEFAULT_VERSION=18`
+- `SCM_DO_BUILD_DURING_DEPLOYMENT=true` (habilita build do Node durante o deploy)
+- `NODE_ENV=production`
+- `PORT` (opcional; o Azure fornece automaticamente)
+- Banco de Dados (com SSL):
+  - `DB_HOST=<seu_host_azure_mysql>`
+  - `DB_PORT=3306`
+  - `DB_USER=<seu_usuario>`
+  - `DB_PASSWORD=<sua_senha>`
+  - `DB_NAME=ezer_dh`
+  - `DB_SSL=true`
+
+### 4) Logs e Health Check
+- Health: `GET /api/health` (deve retornar `{ status: "OK" }` etc.).
+- Logs: ver `backend/logs`. Ajuste retenção conforme necessidade.
+
+### 5) Como funciona em produção
+- O backend Express inicia na porta fornecida pelo Azure (`process.env.PORT`).
+- Em `production`, o backend serve os arquivos estáticos do `frontend/public` e mapeia rotas conhecidas (`/login-minimal`, `/dashboard-minimal`, etc.).
+- O frontend usa `window.location.origin` em produção para montar `BASE_URL` da API.
+
+### 6) Troubleshooting
+- 403/401: verifique JWT e expiração; faça login novamente.
+- Falha ao conectar no MySQL: cheque App Settings do Azure e SSL (`DB_SSL=true`).
+- Dependências ausentes: garanta `SCM_DO_BUILD_DURING_DEPLOYMENT=true` no App Settings; o Oryx fará o build.
+- Node versão: defina `WEBSITE_NODE_DEFAULT_VERSION=18`.
+
+
 ## Modelo lógico e tabelas principais
 
 Principais tabelas (resumo):
