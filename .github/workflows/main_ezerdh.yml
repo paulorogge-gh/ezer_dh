@@ -33,9 +33,21 @@ jobs:
       - name: Ensure frontend assets are mirrored into backend/public/site
         working-directory: ${{ github.workspace }}
         run: |
-          rm -rf backend/public/site
-          mkdir -p backend/public/site
-          cp -R frontend/public/. backend/public/site/
+          if [ -d "frontend/public" ]; then
+            rm -rf backend/public/site
+            mkdir -p backend/public/site
+            cp -R frontend/public/. backend/public/site/ || true
+          else
+            echo "frontend/public not found; skipping asset mirror"
+          fi
+
+      - name: Sanity check assets presence
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "Listing frontend/public (if exists):"
+          ls -la frontend/public || true
+          echo "Listing backend/public/site (if exists):"
+          ls -la backend/public/site || true
 
       - name: Create deployment package (zip)
         run: |
