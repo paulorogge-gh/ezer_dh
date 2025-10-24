@@ -474,9 +474,14 @@ No repositório GitHub, acesse Settings → Secrets and variables → Actions �
 O arquivo `/.github/workflows/main_ezerdh.yml` já está adicionado. Ele:
 - Faz checkout do código.
 - Instala dependências no root, `backend` e `frontend`.
-- Cria um artefato `.zip` e publica no Azure Web App.
+- Cria um pacote `app.zip` (exclui `node_modules` e `.git`).
+- Publica o `app.zip` no Azure Web App.
 
-Branch de deploy: `main`. A cada push na `main`, o Azure fará o deploy automaticamente.
+Branch de deploy: `main`. A cada push na `main`, o deploy é disparado automaticamente.
+
+Notas:
+- O workflow antigo `azure-webapp.yml` foi marcado como **deprecated** e não é mais utilizado.
+- Este repositório usa login no Azure via **credenciais federadas (OIDC)**, configuradas pelo assistente do Azure; os IDs de `client`, `tenant` e `subscription` ficam armazenados como Secrets do repositório e são utilizados no passo `azure/login@v2`.
 
 ### 3) App Settings no Azure (Configurações de Aplicativo)
 No seu Web App (Azure Portal → Configuration → Application settings), adicione as seguintes chaves:
@@ -492,6 +497,8 @@ No seu Web App (Azure Portal → Configuration → Application settings), adicio
   - `DB_PASSWORD=<sua_senha>`
   - `DB_NAME=ezer_dh`
   - `DB_SSL=true`
+
+Importante: o banco do projeto é hospedado no Azure; **nunca** instale ou use instância local em produção. Credenciais ficam no App Settings/`.env` e a conexão deve usar SSL quando necessário [[memory:8380388]].
 
 ### 4) Logs e Health Check
 - Health: `GET /api/health` (deve retornar `{ status: "OK" }` etc.).

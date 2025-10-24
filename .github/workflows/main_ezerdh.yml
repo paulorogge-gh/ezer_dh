@@ -29,16 +29,16 @@ jobs:
           cd backend && npm ci
           cd ../frontend && npm ci
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: .
-
       - name: Create deployment package (zip)
         run: |
           rm -f app.zip
           zip -r app.zip . -x "**/node_modules/**" "**/.git/**"
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-zip
+          path: app.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,10 +48,11 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact from build job
+      - name: Download deployment package
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: app-zip
+          path: .
       
       - name: Login to Azure
         uses: azure/login@v2
