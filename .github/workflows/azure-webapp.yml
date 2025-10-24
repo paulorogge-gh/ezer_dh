@@ -1,43 +1,11 @@
-name: Deploy to Azure Web App
+name: (deprecated)
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18.x'
-
-      - name: Install root deps
-        run: npm ci
-
-      - name: Install backend deps
-        run: cd backend && npm ci
-
-      - name: Install frontend deps
-        run: cd frontend && npm ci
-
-      - name: Build step (optional)
-        run: echo "No build step required for static frontend"
-
-      - name: Zip app for deployment
-        run: |
-          rm -f app.zip
-          zip -r app.zip . -x "**/node_modules/**" "**/.git/**"
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: app.zip
+      - run: echo "Deprecated workflow. Use main_ezerdh.yml"
 
 

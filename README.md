@@ -471,7 +471,7 @@ No repositório GitHub, acesse Settings → Secrets and variables → Actions �
 - `AZURE_WEBAPP_PUBLISH_PROFILE`: Conteúdo do Publish Profile (XML) obtido no Azure Portal: Web App → Get publish profile.
 
 ### 2) Workflow de Deploy
-O arquivo `/.github/workflows/azure-webapp.yml` já está adicionado. Ele:
+O arquivo `/.github/workflows/main_ezerdh.yml` já está adicionado. Ele:
 - Faz checkout do código.
 - Instala dependências no root, `backend` e `frontend`.
 - Cria um artefato `.zip` e publica no Azure Web App.
@@ -480,7 +480,7 @@ Branch de deploy: `main`. A cada push na `main`, o Azure fará o deploy automati
 
 ### 3) App Settings no Azure (Configurações de Aplicativo)
 No seu Web App (Azure Portal → Configuration → Application settings), adicione as seguintes chaves:
-- `WEBSITE_NODE_DEFAULT_VERSION=18`
+- `WEBSITE_NODE_DEFAULT_VERSION=18` (ou 20, conforme seu Web App)
 - `SCM_DO_BUILD_DURING_DEPLOYMENT=true` (habilita build do Node durante o deploy)
 - `NODE_ENV=production`
 - `PORT` (opcional; o Azure fornece automaticamente)
@@ -505,7 +505,7 @@ No seu Web App (Azure Portal → Configuration → Application settings), adicio
 - 403/401: verifique JWT e expiração; faça login novamente.
 - Falha ao conectar no MySQL: cheque App Settings do Azure e SSL (`DB_SSL=true`).
 - Dependências ausentes: garanta `SCM_DO_BUILD_DURING_DEPLOYMENT=true` no App Settings; o Oryx fará o build.
-- Node versão: defina `WEBSITE_NODE_DEFAULT_VERSION=18`.
+- Node versão: defina `WEBSITE_NODE_DEFAULT_VERSION=18` ou `20`.
 
 
 ## Modelo lógico e tabelas principais
