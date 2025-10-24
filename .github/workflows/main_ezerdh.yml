@@ -35,6 +35,11 @@ jobs:
           name: node-app
           path: .
 
+      - name: Create deployment package (zip)
+        run: |
+          rm -f app.zip
+          zip -r app.zip . -x "**/node_modules/**" "**/.git/**"
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -61,5 +66,5 @@ jobs:
         with:
           app-name: 'ezerdh'
           slot-name: 'Production'
-          package: .
+          package: app.zip
           

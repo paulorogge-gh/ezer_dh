@@ -9,10 +9,10 @@
     "dev": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "test": "jest",
+    "build": "echo 'No build step for root (using runtime build)'",
     "test:backend": "cd backend && npm test",
     "test:frontend": "cd frontend && npm test",
     "setup": "node scripts/initial.js",
-    "build": "cd backend && npm run build",
     "logs": "cd backend && npm run logs"
   },
   "keywords": [
