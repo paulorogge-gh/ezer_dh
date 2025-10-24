@@ -31,8 +31,9 @@ jobs:
 
       - name: Ensure frontend assets are mirrored into backend/public/site
         run: |
+          rm -rf backend/public/site
           mkdir -p backend/public/site
-          rsync -av --delete frontend/public/ backend/public/site/
+          cp -R frontend/public/. backend/public/site/
 
       - name: Create deployment package (zip)
         run: |
