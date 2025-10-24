@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const path = require('path');
 
 const { testConnection } = require('./config/db');
 const { logRequest, errorHandler } = require('./utils/logger');
@@ -21,6 +22,7 @@ const usuarioRoutes = require('./routes/usuarioRoutes');
 const app = express();
 // Azure Web App fornece PORT; mantenha PORT_API como fallback local
 const PORT = process.env.PORT || process.env.PORT_API || 3000;
+const FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
 
 // Middlewares de segurança
 app.use(helmet());
@@ -54,17 +56,12 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Rota principal: redirecionar para login minimal
+// Rota principal: servir login minimal diretamente
 app.get('/', (req, res) => {
     try {
-        return res.redirect('/login-minimal');
+        return res.sendFile(path.join(FRONTEND_PUBLIC, 'login-minimal.html'));
     } catch (e) {
-        res.json({
-            message: 'Ezer Desenvolvimento Humano - API',
-            version: '1.0.0',
-            status: 'running',
-            documentation: '/api/health'
-        });
+        return res.redirect('/login-minimal');
     }
 });
 
@@ -81,9 +78,7 @@ app.use('/api/usuarios', usuarioRoutes);
 
 // Servir frontend estático a partir de frontend/public (sempre)
 try {
-    const path = require('path');
-    const frontendPublic = path.join(__dirname, '../../frontend/public');
-    app.use(express.static(frontendPublic));
+    app.use(express.static(FRONTEND_PUBLIC));
     // Mapear rotas conhecidas sem extensão para páginas .html
     const knownPages = [
         'login-minimal.html','dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html','test-auth.html'
@@ -91,15 +86,19 @@ try {
     knownPages.forEach(page => {
         const route = `/${page.replace('.html','')}`;
         app.get(route, (req, res) => {
-            res.sendFile(path.join(frontendPublic, page));
+            res.sendFile(path.join(FRONTEND_PUBLIC, page));
         });
     });
     // Favicon e robots healthcheck
     app.get('/favicon.ico', (req, res) => {
-        try { res.sendFile(path.join(frontendPublic, 'favicon.svg')); } catch { res.status(204).end(); }
+        try { res.sendFile(path.join(FRONTEND_PUBLIC, 'favicon.svg')); } catch { res.status(204).end(); }
     });
     app.get('/robots933456.txt', (req, res) => {
         res.type('text/plain').send('');
+    });
+    // Catch-all: se não encontrado, servir login
+    app.get('*', (req, res) => {
+        try { return res.sendFile(path.join(FRONTEND_PUBLIC, 'login-minimal.html')); } catch { return res.redirect('/login-minimal'); }
     });
 } catch(e) { /* noop */ }
 

@@ -101,7 +101,7 @@ Rotas da API (todas autenticadas, respostas JSON padronizadas):
 - GET `/api/lideres?empresa_id=ID&status=Ativo|Inativo` — listar líderes (opcionalmente por empresa/status)
 - GET `/api/lideres/:id` — detalhes de um líder
 - POST `/api/lideres` — criar líder
-  - Body: `{ "id_empresa": number, "id_colaborador":git add . number, "status": "Ativo"|"Inativo" }`
+  - Body: `{ "id_empresa": number, "id_colaborador": number, "status": "Ativo"|"Inativo" }`
 - PUT `/api/lideres/:id` — atualizar líder (status e/ou colaborador)
   - Body: `{ "id_empresa"?: number, "id_colaborador"?: number, "status"?: "Ativo"|"Inativo" }`
 - DELETE `/api/lideres/:id` — excluir líder
@@ -480,10 +480,11 @@ Branch de deploy: `main`. A cada push na `main`, o Azure fará o deploy automati
 
 ### 3) App Settings no Azure (Configurações de Aplicativo)
 No seu Web App (Azure Portal → Configuration → Application settings), adicione as seguintes chaves:
-- `WEBSITE_NODE_DEFAULT_VERSION=18` (ou 20, conforme seu Web App)
+- `WEBSITE_NODE_DEFAULT_VERSION=20` (corrija a chave se estiver "WEBSITE_NODE_DEFAULT_VERSIO")
 - `SCM_DO_BUILD_DURING_DEPLOYMENT=true` (habilita build do Node durante o deploy)
 - `NODE_ENV=production`
 - `PORT` (opcional; o Azure fornece automaticamente)
+- `WEBSITES_INCLUDE_CLOUD_CERTS=true` (carrega certificados de CA do Azure no contêiner)
 - Banco de Dados (com SSL):
   - `DB_HOST=<seu_host_azure_mysql>`
   - `DB_PORT=3306`
