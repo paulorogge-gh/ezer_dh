@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = (() => { try { return require('compression'); } catch (e) { return null; } })();
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const path = require('path');
@@ -34,10 +35,35 @@ const FRONTEND_PUBLIC = (function() {
     return configured;
 })();
 
+// Guarda de autenticação para páginas privadas
+function isAuthenticatedRequest(req) {
+    try {
+        const authHeader = (req.headers['authorization'] || '').toLowerCase();
+        const hasBearer = authHeader.startsWith('bearer ');
+        const cookieHeader = req.headers['cookie'] || '';
+        const hasSessionCookie = /ezer_session=1/.test(cookieHeader);
+        return hasBearer || hasSessionCookie;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Logs de inicialização para diagnóstico de estáticos
+try {
+    const loginFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
+    const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
+    const genericIndex = path.join(FRONTEND_PUBLIC, 'index.html');
+    console.log('🧭 FRONTEND_PUBLIC resolvido para:', FRONTEND_PUBLIC);
+    console.log('🧭 login-minimal existe?', fs.existsSync(loginFile));
+    console.log('🧭 index-minimal existe?', fs.existsSync(indexFile));
+    console.log('🧭 index.html existe?', fs.existsSync(genericIndex));
+} catch {}
+
 // Middlewares de segurança
 app.use(helmet());
+if (compression) { app.use(compression()); }
 app.use(cors({
-    origin: true, // Aceitar todas as origens para debug
+    origin: process.env.CORS_ORIGIN || true,
     credentials: true
 }));
 
@@ -75,19 +101,23 @@ app.get('/api/health', (req, res) => {
 app.get('/', (req, res) => {
     const loginFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
     const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
+    const genericIndex = path.join(FRONTEND_PUBLIC, 'index.html');
     try {
         if (fs.existsSync(loginFile)) {
             return res.sendFile(loginFile, (err) => {
                 if (err) {
                     if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+                    if (fs.existsSync(genericIndex)) return res.sendFile(genericIndex);
                     return res.status(500).send('Erro ao carregar página inicial');
                 }
             });
         }
         if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+        if (fs.existsSync(genericIndex)) return res.sendFile(genericIndex);
         return res.status(404).send('Página inicial não encontrada');
     } catch (e) {
         if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+        if (fs.existsSync(genericIndex)) return res.sendFile(genericIndex);
         return res.status(500).send('Erro ao carregar página inicial');
     }
 });
@@ -108,13 +138,19 @@ try {
     if (fs.existsSync(FRONTEND_PUBLIC)) {
         app.use(express.static(FRONTEND_PUBLIC));
     }
-    // Mapear rotas conhecidas sem extensão para páginas .html
-    const knownPages = [
-        'login-minimal.html','dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html','test-auth.html'
-    ];
+    // Mapear rotas conhecidas sem extensão para páginas .html com guarda de autenticação
+    const publicPages = new Set(['login-minimal.html', 'index-minimal.html', 'index.html', 'test-auth.html', 'favicon.svg']);
+    const privatePages = new Set([
+        'dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html'
+    ]);
+    const knownPages = [...publicPages, ...privatePages];
     knownPages.forEach(page => {
         const route = `/${page.replace('.html','')}`;
         app.get(route, (req, res) => {
+            // Bloquear acesso a páginas privadas sem autenticação
+            if (privatePages.has(page) && !isAuthenticatedRequest(req)) {
+                return res.redirect('/login-minimal');
+            }
             const pageFile = path.join(FRONTEND_PUBLIC, page);
             if (fs.existsSync(pageFile)) {
                 return res.sendFile(pageFile, (err) => {
@@ -131,8 +167,11 @@ try {
     app.get('/robots933456.txt', (req, res) => {
         res.type('text/plain').send('');
     });
-    // Catch-all: se não encontrado, servir login (sem redirect para evitar loops)
+    // Catch-all: para caminhos não-API, servir login (sem redirect para evitar loops)
     app.get('*', (req, res) => {
+        if (req.path.startsWith('/api')) {
+            return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Endpoint não encontrado' } });
+        }
         const fallbackFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
         const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
         if (fs.existsSync(fallbackFile)) {
@@ -181,18 +220,7 @@ async function startServer() {
     }
 }
 
-// Tratamento de erros não capturados
-process.on('uncaughtException', (error) => {
-    console.error('❌ Erro não capturado:', error);
-    process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Promise rejeitada não tratada:', reason);
-    process.exit(1);
-});
-
-// Iniciar servidor
+// Handlers globais de processo configurados em utils/logger.js
 startServer();
 
 module.exports = app;

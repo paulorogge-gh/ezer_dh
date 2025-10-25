@@ -67,13 +67,19 @@ BACKEND_PID=$!
 sleep 3
 
 # Iniciar frontend na porta 3000
-echo "🌐 Iniciando frontend na porta 3000..."
-(cd frontend && npm start) &
-FRONTEND_PID=$!
+if [ "$START_ONLY_BACKEND" = "true" ]; then
+    echo "💤 START_ONLY_BACKEND=true: não iniciar o frontend."
+else
+    echo "🌐 Iniciando frontend na porta 3000..."
+    (cd frontend && npm start) &
+    FRONTEND_PID=$!
+fi
 
 echo ""
 echo "✅ Servidores iniciados com sucesso!"
-echo "🌐 Frontend: http://localhost:3000"
+if [ "$START_ONLY_BACKEND" != "true" ]; then
+    echo "🌐 Frontend: http://localhost:3000"
+fi
 echo "🔧 Backend: http://localhost:3001"
 echo "📊 Health Check: http://localhost:3001/api/health"
 echo ""

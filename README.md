@@ -43,7 +43,17 @@ cd frontend && PORT=3000 npm start
 ### 🏢 Azure App Service (Startup Command)
 - Em produção (Azure), use apenas o backend servindo os estáticos:
   - Startup Command (Linux): `npm run start:azure`
-- Observação: `npm start` agora inicia dois processos (dev local). Para o Azure, mantenha um único processo do backend.
+  - O backend serve os estáticos do `frontend/public` (ou `backend/public/site` via `FRONTEND_PUBLIC_DIR`).
+  - Em desenvolvimento, para iniciar apenas o backend: `START_ONLY_BACKEND=true ./start.sh`.
+
+#### Frontend estático (garantir diretório correto)
+- O backend procura arquivos estáticos em:
+  1) `frontend/public` (padrão)
+  2) `backend/public/site` (fallback, espelhado no CI)
+- Para forçar um caminho específico (recomendado no Azure), adicione no App Settings:
+  - `FRONTEND_PUBLIC_DIR=backend/public/site`
+  - ou `FRONTEND_PUBLIC_DIR=frontend/public`
+- O backend registra nos logs do App Service qual diretório foi resolvido e se os arquivos essenciais existem: `login-minimal.html`, `index-minimal.html`, `index.html`.
 
 ---
 
@@ -83,7 +93,7 @@ RBAC:
 - `empresa`: CRUD em `usuarios` do seu escopo (usuários tipo `empresa` da própria e `colaborador` da própria empresa).
 - `colaborador`: leitura do próprio e atualização limitada (e-mail/senha).
 
-Frontend:
+Frontend (DEV-ONLY):
 - Página `frontend/public/usuarios.html` + script `frontend/public/js/usuarios.js`.
 - Filtros: Empresa, Tipo, Status; busca por e-mail; ações: criar, editar, reset de senha, alterar status, excluir.
 - Navegação adicionada na sidebar.
@@ -109,7 +119,8 @@ Rotas da API (todas autenticadas, respostas JSON padronizadas):
 - GET `/api/lideres?empresa_id=ID&status=Ativo|Inativo` — listar líderes (opcionalmente por empresa/status)
 - GET `/api/lideres/:id` — detalhes de um líder
 - POST `/api/lideres` — criar líder
-  - Body: `{ "id_empresa": number, "id_colaborador": number, "status": "Ativo"|"Inativo" }`
+  - Body: `{ "id_empresa": number, "id_colaborador": number, "status": "Ativo"|"Inativo" }`git add .
+  git commit -m "."
 - PUT `/api/lideres/:id` — atualizar líder (status e/ou colaborador)
   - Body: `{ "id_empresa"?: number, "id_colaborador"?: number, "status"?: "Ativo"|"Inativo" }`
 - DELETE `/api/lideres/:id` — excluir líder
@@ -222,10 +233,10 @@ Objetivo: organizar, padronizar e eliminar duplicidades para garantir funcioname
 
 ## Configuração do Frontend (config.js)
 
-Exemplo de configuração esperada no `frontend/public/js/config.js`:
+Exemplo de configuração esperada no `frontend/public/js/config.js` (produção):
 ```js
 window.API_CONFIG = {
-  BASE_URL: 'http://localhost:3001/api'
+  BASE_URL: 'https://ezerdh-d3adeyeaanbncmcz.canadacentral-01.azurewebsites.net/api'
 };
 window.FRONTEND_CONFIG = {
   LOGIN_PAGE: '/login-minimal',
@@ -451,7 +462,7 @@ As credenciais de conexão com o banco devem ser configuradas no arquivo `.env` 
 
 Exemplo:
 ```
-PORT_API=3000
+PORT_API=3001
 # DB_HOST deve apontar para o host do banco no Azure (não use `localhost` em produção)
 DB_HOST=<seu_host_azure_mysql>
 DB_USER=<seu_usuario>
