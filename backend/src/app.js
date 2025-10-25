@@ -74,15 +74,21 @@ app.get('/api/health', (req, res) => {
 // Rota principal: servir login minimal diretamente (com fallback)
 app.get('/', (req, res) => {
     const loginFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
+    const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
     try {
         if (fs.existsSync(loginFile)) {
             return res.sendFile(loginFile, (err) => {
-                if (err) return res.redirect('/login-minimal');
+                if (err) {
+                    if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+                    return res.status(500).send('Erro ao carregar página inicial');
+                }
             });
         }
-        return res.redirect('/login-minimal');
+        if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+        return res.status(404).send('Página inicial não encontrada');
     } catch (e) {
-        return res.redirect('/login-minimal');
+        if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+        return res.status(500).send('Erro ao carregar página inicial');
     }
 });
 
@@ -112,10 +118,10 @@ try {
             const pageFile = path.join(FRONTEND_PUBLIC, page);
             if (fs.existsSync(pageFile)) {
                 return res.sendFile(pageFile, (err) => {
-                    if (err) return res.redirect('/login-minimal');
+                    if (err) return res.status(500).send('Erro ao carregar página');
                 });
             }
-            return res.redirect('/login-minimal');
+            return res.status(404).send('Página não encontrada');
         });
     });
     // Favicon e robots healthcheck
@@ -125,15 +131,20 @@ try {
     app.get('/robots933456.txt', (req, res) => {
         res.type('text/plain').send('');
     });
-    // Catch-all: se não encontrado, servir login
+    // Catch-all: se não encontrado, servir login (sem redirect para evitar loops)
     app.get('*', (req, res) => {
         const fallbackFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
+        const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
         if (fs.existsSync(fallbackFile)) {
             return res.sendFile(fallbackFile, (err) => {
-                if (err) return res.redirect('/login-minimal');
+                if (err) {
+                    if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+                    return res.status(500).send('Erro ao carregar página');
+                }
             });
         }
-        return res.redirect('/login-minimal');
+        if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+        return res.status(404).send('Página não encontrada');
     });
 } catch(e) { /* noop */ }
 
