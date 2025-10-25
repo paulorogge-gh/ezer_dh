@@ -25,10 +25,7 @@ jobs:
 
       - name: Install dependencies (workspaces)
         run: |
-          npm ci
-          cd backend && npm ci
-          cd ../frontend && npm ci
-          cd ..
+          npm ci --workspaces --include-workspace-root || npm install --workspaces --include-workspace-root
 
       - name: Ensure frontend assets are mirrored into backend/public/site
         working-directory: ${{ github.workspace }}
