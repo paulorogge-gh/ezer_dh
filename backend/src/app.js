@@ -21,6 +21,8 @@ const liderRoutes = require('./routes/liderRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 
 const app = express();
+// Permitir Express reconhecer IP real atrás de proxy (Azure App Service)
+app.set('trust proxy', 1);
 // Azure Web App fornece PORT; mantenha PORT_API como fallback local (3001)
 const PORT = process.env.PORT || process.env.PORT_API || 3001;
 const DEFAULT_FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
@@ -39,13 +41,18 @@ app.use(cors({
     credentials: true
 }));
 
-// Rate limiting
+// Rate limiting (configurável via env)
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || `${15 * 60 * 1000}`, 10);
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '300', 10);
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // máximo 100 requests por IP
-    message: 'Muitas requisições deste IP, tente novamente em 15 minutos.'
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
 });
-app.use(limiter);
+// Aplicar rate limit apenas nas rotas da API
+app.use('/api', limiter);
 
 // Middleware para parsing de JSON
 app.use(express.json({ limit: '10mb' }));

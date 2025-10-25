@@ -506,6 +506,10 @@ No seu Web App (Azure Portal → Configuration → Application settings), adicio
   - `DB_NAME=ezer_dh`
   - `DB_SSL=true`
 
+- Rate Limit (opcional, para ajustar em produção):
+  - `RATE_LIMIT_WINDOW_MS=900000`  (janela em ms, ex.: 15 minutos)
+  - `RATE_LIMIT_MAX=300`           (máximo de requisições por IP por janela)
+
 Importante: o banco do projeto é hospedado no Azure; **nunca** instale ou use instância local em produção. Credenciais ficam no App Settings/`.env` e a conexão deve usar SSL quando necessário [[memory:8380388]].
 
 ### 4) Logs e Health Check
