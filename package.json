@@ -9,7 +9,7 @@
     "dev": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "start:all": "bash -c 'cd backend && PORT_API=3001 npm start & sleep 2; cd frontend && PORT=3000 npm start'",
-    "start:azure": "cd backend && npm start",
+    "start:azure": "bash -c 'cd backend && npm start & sleep 2; cd frontend && PORT=3000 node server.js & wait'",
     "test": "jest",
     "build": "echo 'No build step for root (using runtime build)'",
     "test:backend": "cd backend && npm test",
