@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Rota principal: redireciona para login minimal
 app.get('/', (req, res) => {
-  res.redirect('/login-minimal');
+  res.redirect('/login');
 });
 
 // Status do servidor para debug
@@ -25,7 +25,7 @@ const server = app.listen(PORT, () => {
   console.log('   EZER DESENVOLVIMENTO HUMANO - FRONTEND (DEV-ONLY)');
   console.log('🌐 ================================================');
   console.log(`🌐 Servidor rodando em: http://localhost:${PORT}`);
-  console.log(`🔐 Login: http://localhost:${PORT}/login-minimal`);
+  console.log(`🔐 Login: http://localhost:${PORT}/login`);
   console.log(`⏰ Iniciado em: ${new Date().toLocaleString('pt-BR')}`);
   console.log('🌐 ================================================');
 });

@@ -50,12 +50,12 @@ function isAuthenticatedRequest(req) {
 
 // Logs de inicialização para diagnóstico de estáticos
 try {
-    const loginFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
-    const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
+    const loginFile = path.join(FRONTEND_PUBLIC, 'login.html');
+    const indexFile = path.join(FRONTEND_PUBLIC, 'index.html');
     const genericIndex = path.join(FRONTEND_PUBLIC, 'index.html');
     console.log('🧭 FRONTEND_PUBLIC resolvido para:', FRONTEND_PUBLIC);
-    console.log('🧭 login-minimal existe?', fs.existsSync(loginFile));
-    console.log('🧭 index-minimal existe?', fs.existsSync(indexFile));
+    console.log('🧭 login.html existe?', fs.existsSync(loginFile));
+    console.log('🧭 index.html existe?', fs.existsSync(indexFile));
     console.log('🧭 index.html existe?', fs.existsSync(genericIndex));
 } catch {}
 
@@ -99,8 +99,8 @@ app.get('/api/health', (req, res) => {
 
 // Rota principal: servir login minimal diretamente (com fallback)
 app.get('/', (req, res) => {
-    const loginFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
-    const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
+    const loginFile = path.join(FRONTEND_PUBLIC, 'login.html');
+    const indexFile = path.join(FRONTEND_PUBLIC, 'index.html');
     const genericIndex = path.join(FRONTEND_PUBLIC, 'index.html');
     try {
         if (fs.existsSync(loginFile)) {
@@ -139,9 +139,9 @@ try {
         app.use(express.static(FRONTEND_PUBLIC));
     }
     // Mapear rotas conhecidas sem extensão para páginas .html com guarda de autenticação
-    const publicPages = new Set(['login-minimal.html', 'index-minimal.html', 'index.html', 'test-auth.html', 'favicon.svg']);
+    const publicPages = new Set(['login.html', 'index.html', 'test-auth.html', 'favicon.svg']);
     const privatePages = new Set([
-        'dashboard-minimal.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html'
+        'dashboard.html','usuarios.html','empresas.html','departamentos.html','colaboradores.html','ocorrencias.html','lideres.html','treinamentos.html','feedbacks.html','avaliacoes.html','pdi.html','perfil.html','configuracoes.html'
     ]);
     const knownPages = [...publicPages, ...privatePages];
     knownPages.forEach(page => {
@@ -149,7 +149,7 @@ try {
         app.get(route, (req, res) => {
             // Bloquear acesso a páginas privadas sem autenticação
             if (privatePages.has(page) && !isAuthenticatedRequest(req)) {
-                return res.redirect('/login-minimal');
+                return res.redirect('/login');
             }
             const pageFile = path.join(FRONTEND_PUBLIC, page);
             if (fs.existsSync(pageFile)) {
@@ -172,8 +172,8 @@ try {
         if (req.path.startsWith('/api')) {
             return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Endpoint não encontrado' } });
         }
-        const fallbackFile = path.join(FRONTEND_PUBLIC, 'login-minimal.html');
-        const indexFile = path.join(FRONTEND_PUBLIC, 'index-minimal.html');
+        const fallbackFile = path.join(FRONTEND_PUBLIC, 'login.html');
+        const indexFile = path.join(FRONTEND_PUBLIC, 'index.html');
         if (fs.existsSync(fallbackFile)) {
             return res.sendFile(fallbackFile, (err) => {
                 if (err) {
