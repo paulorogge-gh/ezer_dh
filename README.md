@@ -29,13 +29,21 @@ Automatizar e centralizar processos de **gestão de pessoas** e **avaliação de
 # Iniciar ambos os servidores
 ./start.sh
 
+# Ou via npm (local):
+npm start  # inicia backend (3001) e frontend (3000)
+
 # Ou iniciar separadamente:
 # Backend (porta 3001)
-cd backend && npm start
+cd backend && PORT_API=3001 npm start
 
-# Frontend (porta 3000)  
-cd frontend && npm start
+# Frontend (porta 3000)
+cd frontend && PORT=3000 npm start
 ```
+
+### 🏢 Azure App Service (Startup Command)
+- Em produção (Azure), use apenas o backend servindo os estáticos:
+  - Startup Command (Linux): `npm run start:azure`
+- Observação: `npm start` agora inicia dois processos (dev local). Para o Azure, mantenha um único processo do backend.
 
 ---
 

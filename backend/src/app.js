@@ -21,8 +21,8 @@ const liderRoutes = require('./routes/liderRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 
 const app = express();
-// Azure Web App fornece PORT; mantenha PORT_API como fallback local
-const PORT = process.env.PORT || process.env.PORT_API || 3000;
+// Azure Web App fornece PORT; mantenha PORT_API como fallback local (3001)
+const PORT = process.env.PORT || process.env.PORT_API || 3001;
 const DEFAULT_FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
 const BACKEND_SITE_PUBLIC = path.join(__dirname, 'public/site');
 const FRONTEND_PUBLIC = (function() {
