@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "start:azure": "node -e \"console.log('frontend dev-only; estáticos servidos pelo backend em produção')\"",
     "build": "echo 'No build process needed for static HTML/CSS/JS'",
     "test": "echo 'Tests not implemented yet'"
   },

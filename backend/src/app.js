@@ -196,10 +196,14 @@ async function startServer() {
         // Testar conexão com o banco de dados
         console.log('🔍 Testando conexão com o banco de dados...');
         const dbConnected = await testConnection();
-        
+        const STRICT_DB = (process.env.REQUIRE_DB === 'true') || ((process.env.NODE_ENV || '').toLowerCase() === 'production');
         if (!dbConnected) {
-            console.error('❌ Falha na conexão com o banco. Servidor não será iniciado.');
-            process.exit(1);
+            if (STRICT_DB) {
+                console.error('❌ Falha na conexão com o banco. Servidor não será iniciado (STRICT_DB habilitado).');
+                process.exit(1);
+            } else {
+                console.warn('⚠️ Falha ao conectar ao banco. Continuando sem DB (modo desenvolvimento).');
+            }
         }
 
         // Iniciar servidor

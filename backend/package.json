@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "start:azure": "node src/app.js",
     "test": "jest",
     "build": "echo 'No build step for backend (no compilation)'",
     "test:watch": "jest --watch",
