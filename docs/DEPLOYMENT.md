@@ -2,7 +2,7 @@
 
 ## Pré-requisitos
 
-- Node.js 16+ instalado
+- Node.js 18+ instalado
 - MySQL 8.0+ configurado
 - Servidor Linux (Ubuntu/CentOS)
 - Nginx (opcional, para proxy reverso)
@@ -84,18 +84,18 @@ Criar arquivo `/etc/nginx/sites-available/ezer-dh`:
 ```nginx
 server {
     listen 80;
-    server_name ezer-dh.com;
+    server_name server01.paulorogge.com.br;
 
     # Frontend
     location / {
         root /var/www/html/ezer_dh/frontend/public;
-        index index-minimal.html;
-        try_files $uri $uri/ /index-minimal.html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
     }
 
-    # API
+    # API (proxy para backend Node na porta 8000)
     location /api {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -131,7 +131,7 @@ sudo journalctl -u ezer-dh -f
 
 ```bash
 # Verificar status da API
-curl http://localhost:3000/api/health
+curl http://server01.paulorogge.com.br/api/health
 
 # Verificar status do PM2
 pm2 status
@@ -183,7 +183,7 @@ free -h
 ps aux | grep node
 
 # Verificar portas em uso
-netstat -tlnp | grep :3000
+netstat -tlnp | grep :8000
 
 # Verificar logs de erro
 tail -f /var/log/nginx/error.log

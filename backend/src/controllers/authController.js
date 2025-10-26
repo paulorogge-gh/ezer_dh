@@ -34,7 +34,7 @@ class AuthController {
             const isValidPassword = await user.verificarSenha(password);
             
             if (!isValidPassword) {
-                logAuth('login_failed', user.id, req.ip);
+                logAuth('login_failed', user.id_usuario, req.ip);
                 return res.status(401).json({
                     success: false,
                     error: 'Credenciais inválidas'

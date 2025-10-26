@@ -33,7 +33,9 @@ kill_port_processes() {
     fi
 }
 
-# Encerrar processos nas portas 3000 e 3001
+# Encerrar processos nas portas 8080, 8000, 3000 e 3001
+kill_port_processes 8080
+kill_port_processes 8000
 kill_port_processes 3000
 kill_port_processes 3001
 
@@ -58,32 +60,50 @@ echo ""
 echo "🚀 Iniciando servidores..."
 echo "================================================"
 
-# Iniciar backend na porta 3001
-echo "🔧 Iniciando backend na porta 3001..."
-(cd backend && npm start) &
+# Expor variáveis padrão se não definidas
+export PORT_API=${PORT_API:-8000}
+export CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
+
+# Iniciar backend na porta 8000
+echo "🔧 Iniciando backend na porta $PORT_API..."
+(cd backend && nohup npm start >/tmp/backend.log 2>&1 &)
 BACKEND_PID=$!
 
 # Aguardar um pouco para o backend inicializar
 sleep 3
 
-# Iniciar frontend na porta 3000
-if [ "$START_ONLY_BACKEND" = "true" ]; then
-    echo "💤 START_ONLY_BACKEND=true: não iniciar o frontend."
-else
-    echo "🌐 Iniciando frontend na porta 3000..."
-    (cd frontend && npm start) &
-    FRONTEND_PID=$!
-fi
+# Iniciar frontend na porta 8080
+echo "🌐 Iniciando frontend na porta 8080..."
+(cd frontend && nohup npm start >/tmp/frontend.log 2>&1 &)
+FRONTEND_PID=$!
 
 echo ""
 echo "✅ Servidores iniciados com sucesso!"
-if [ "$START_ONLY_BACKEND" != "true" ]; then
-    echo "🌐 Frontend: http://localhost:3000"
-fi
-echo "🔧 Backend: http://localhost:3001"
-echo "📊 Health Check: http://localhost:3001/api/health"
+echo "🌐 Frontend: http://localhost:8080"
+echo "🔧 Backend: http://localhost:8000"
+echo "📊 Health Check: http://localhost:8000/api/health"
 echo ""
 echo "Pressione Ctrl+C para parar os servidores"
+
+# Verificar health da API com retry
+HEALTH_URL="http://localhost:8000/api/health"
+ATTEMPTS=3
+SLEEP_BETWEEN=2
+
+echo "🩺 Verificando health da API em $HEALTH_URL (até $ATTEMPTS tentativas)"
+for i in $(seq 1 $ATTEMPTS); do
+  STATUS=$(curl -s "$HEALTH_URL" || true)
+  if echo "$STATUS" | grep -q '"ok":true'; then
+    echo "✅ Health OK: $STATUS"
+    break
+  else
+    echo "⏳ Tentativa $i falhou. Aguardando $SLEEP_BETWEEN s..."
+    sleep $SLEEP_BETWEEN
+  fi
+  if [ "$i" -eq "$ATTEMPTS" ]; then
+    echo "⚠️ Health não confirmou OK após $ATTEMPTS tentativas: $STATUS"
+  fi
+done
 
 # Aguardar sinal de interrupção
 trap "echo ''; echo '🛑 Parando servidores...'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit 0" INT

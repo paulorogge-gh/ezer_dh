@@ -5,7 +5,9 @@ require('dotenv').config();
 const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
-if (missingVars.length > 0) {
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (missingVars.length > 0 && isProduction) {
     console.error('❌ Variáveis de ambiente obrigatórias não encontradas:');
     missingVars.forEach(varName => console.error(`   - ${varName}`));
     console.error('🔧 Configure as variáveis no arquivo .env');
@@ -25,8 +27,17 @@ const dbConfig = {
     queueLimit: 0
 };
 
-// Pool de conexões
-const pool = mysql.createPool(dbConfig);
+// Pool de conexões (em dev, se env faltar, cria pool mock)
+let pool;
+if (missingVars.length > 0 && !isProduction) {
+    console.warn('⚠️ Variáveis de DB ausentes em desenvolvimento; inicializando pool mock.');
+    pool = {
+        getConnection: async () => { throw new Error('Pool mock: DB não configurado'); },
+        end: async () => {}
+    };
+} else {
+    pool = mysql.createPool(dbConfig);
+}
 
 // Função para testar a conexão
 async function testConnection() {
