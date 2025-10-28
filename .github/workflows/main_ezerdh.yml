@@ -23,13 +23,17 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: npm install (workspaces), build, and test
+      - name: npm install (workspaces)
+        run: |
+          set -e
+          cd ezer_dh
+          npm install --workspaces --no-audit --no-fund
+          cd backend && npm install --no-audit --no-fund || true
+          cd ../frontend && npm install --no-audit --no-fund || true
+      
+      - name: Build and test (non-blocking)
         run: |
           cd ezer_dh
-          npm ci --workspaces
-          cd backend && npm ci || true
-          cd ../frontend && npm ci || true
-          cd ..
           npm run build --if-present || true
           npm run test --if-present || true
 
