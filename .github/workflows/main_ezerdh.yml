@@ -74,4 +74,6 @@ jobs:
           app-name: 'ezerdh'
           slot-name: 'Production'
           package: .
+        env:
+          FRONTEND_PORT: 8080
           
