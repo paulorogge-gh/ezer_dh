@@ -82,17 +82,6 @@ app.get('/', (req, res) => {
   res.redirect('/login');
 });
 
-// Catch-all para rotas não-API: servir frontend (login) para evitar 404 do Azure
-app.get('*', (req, res, next) => {
-  try {
-    const url = req.url || '';
-    if (url.startsWith('/api')) return next();
-    // Se o arquivo existe sob FRONTEND_PUBLIC, deixa o express.static servir
-    // Caso contrário, envia login.html como fallback
-    res.sendFile(path.join(FRONTEND_PUBLIC, 'login.html'));
-  } catch (e) { return next(); }
-});
-
 // Handler de erros deve ser o último
 app.use(errorHandler);
 

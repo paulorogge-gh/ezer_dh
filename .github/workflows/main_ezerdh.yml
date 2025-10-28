@@ -1,7 +1,7 @@
-git add# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - ezerdh (monorepo root)
+name: Build and deploy Node.js app to Azure Web App - ezerdh
 
 on:
   push:
@@ -19,22 +19,21 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: '20.x'
 
-      - name: npm install (workspaces), build, and test
+      - name: npm install, build, and test
         run: |
-          npm install --workspaces
+          npm install
           npm run build --if-present
           npm run test --if-present
 
-      # Upload artifact (optional). Como vamos fazer checkout no job de deploy, podemos pular o artifact.
-      # - name: Upload artifact for deployment job (root ezer_dh)
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: node-app
-      #     path: ezer_dh
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,8 +43,10 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -60,5 +61,5 @@ jobs:
         with:
           app-name: 'ezerdh'
           slot-name: 'Production'
-          package: ezer_dh
+          package: .
           
