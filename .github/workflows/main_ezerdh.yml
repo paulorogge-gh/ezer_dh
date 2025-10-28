@@ -25,13 +25,13 @@ jobs:
 
       - name: Install dependencies (simple)
         run: |
-          npm ci -C ezer_dh || npm install -C ezer_dh
-          npm ci -C ezer_dh/backend || npm install -C ezer_dh/backend || true
-          npm ci -C ezer_dh/frontend || npm install -C ezer_dh/frontend || true
+          npm ci || npm install
+          npm ci -C backend || npm install -C backend || true
+          npm ci -C frontend || npm install -C frontend || true
       
       - name: Build (optional)
         run: |
-          npm run -C ezer_dh build --if-present || true
+          npm run build --if-present || true
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
