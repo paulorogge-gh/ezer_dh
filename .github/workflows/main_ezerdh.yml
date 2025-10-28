@@ -35,9 +35,11 @@ jobs:
 
       - name: Bundle frontend into backend (static assets)
         run: |
-          rm -rf backend/public
-          mkdir -p backend/public
-          cp -a frontend/public/. backend/public/
+          set -e
+          test -d ezer_dh/frontend/public
+          rm -rf ezer_dh/backend/public
+          mkdir -p ezer_dh/backend/public
+          cp -R ezer_dh/frontend/public/. ezer_dh/backend/public/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
