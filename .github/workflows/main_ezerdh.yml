@@ -24,16 +24,14 @@ jobs:
           node-version: '20.x'
 
       - name: Install dependencies (simple)
-        working-directory: ezer_dh
         run: |
-          npm install
-          cd backend && npm install || true
-          cd ../frontend && npm install || true
+          npm ci -C ezer_dh || npm install -C ezer_dh
+          npm ci -C ezer_dh/backend || npm install -C ezer_dh/backend || true
+          npm ci -C ezer_dh/frontend || npm install -C ezer_dh/frontend || true
       
       - name: Build (optional)
-        working-directory: ezer_dh
         run: |
-          npm run build --if-present || true
+          npm run -C ezer_dh build --if-present || true
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
