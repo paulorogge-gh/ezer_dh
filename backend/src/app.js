@@ -10,7 +10,8 @@ const apiRoutes = require('./routes');
 const { testConnection } = require('./config/db');
 
 const app = express();
-const PORT = parseInt(process.env.PORT_API, 10) || 8000;
+// Azure Web App fornece PORT; preferir PORT e cair para PORT_API
+const PORT = parseInt(process.env.PORT || process.env.PORT_API, 10) || 8000;
 
 // Suporte a múltiplas origens CORS
 const singleOrigin = process.env.CORS_ORIGIN || 'http://localhost:8080';
@@ -53,8 +54,33 @@ app.use('/api', apiLimiter);
 // Montagem das rotas da API
 app.use('/api', apiRoutes);
 
-// Arquivos públicos de uploads (se necessário)
-app.use('/public', express.static(path.join(__dirname, '../public')));
+// Servir frontend estático a partir de ezer_dh/frontend/public (um único Web App)
+const FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
+app.use(express.static(FRONTEND_PUBLIC));
+
+// Mapear rotas amigáveis para páginas front
+const pageRoute = (routePath, fileName) => {
+  app.get(routePath, (req, res) => {
+    res.sendFile(path.join(FRONTEND_PUBLIC, fileName));
+  });
+};
+pageRoute('/login', 'login.html');
+pageRoute('/dashboard', 'dashboard.html');
+pageRoute('/usuarios', 'usuarios.html');
+pageRoute('/empresas', 'empresas.html');
+pageRoute('/departamentos', 'departamentos.html');
+pageRoute('/colaboradores', 'colaboradores.html');
+pageRoute('/ocorrencias', 'ocorrencias.html');
+pageRoute('/lideres', 'lideres.html');
+pageRoute('/treinamentos', 'treinamentos.html');
+pageRoute('/feedbacks', 'feedbacks.html');
+pageRoute('/avaliacoes', 'avaliacoes.html');
+pageRoute('/pdi', 'pdi.html');
+
+// Redirecionar root para login
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
 
 // Handler de erros deve ser o último
 app.use(errorHandler);

@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
 
 // ==================================================
 // SESSÃO (SIMPLIFICADA)
