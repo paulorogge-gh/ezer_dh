@@ -23,22 +23,18 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Install dependencies (simple)
+      - name: npm install (root ezer_dh), build, and test
+        working-directory: ezer_dh
         run: |
-          npm ci || npm install
-          npm ci -C backend || npm install -C backend || true
-          npm ci -C frontend || npm install -C frontend || true
-      
-      - name: Build (optional)
-        run: |
-          npm run build --if-present || true
-
+          npm ci
+          npm run build --if-present
+          npm run test --if-present
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: ezer_dh
 
   deploy:
     runs-on: ubuntu-latest
@@ -66,7 +62,5 @@ jobs:
         with:
           app-name: 'ezerdh'
           slot-name: 'Production'
-          package: .
-        env:
-          FRONTEND_PORT: 8080
+          package: ezer_dh
           
