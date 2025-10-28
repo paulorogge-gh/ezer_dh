@@ -54,33 +54,7 @@ app.use('/api', apiLimiter);
 // Montagem das rotas da API
 app.use('/api', apiRoutes);
 
-// Servir frontend estático a partir de ezer_dh/frontend/public (um único Web App)
-const FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
-app.use(express.static(FRONTEND_PUBLIC));
-
-// Mapear rotas amigáveis para páginas front
-const pageRoute = (routePath, fileName) => {
-  app.get(routePath, (req, res) => {
-    res.sendFile(path.join(FRONTEND_PUBLIC, fileName));
-  });
-};
-pageRoute('/login', 'login.html');
-pageRoute('/dashboard', 'dashboard.html');
-pageRoute('/usuarios', 'usuarios.html');
-pageRoute('/empresas', 'empresas.html');
-pageRoute('/departamentos', 'departamentos.html');
-pageRoute('/colaboradores', 'colaboradores.html');
-pageRoute('/ocorrencias', 'ocorrencias.html');
-pageRoute('/lideres', 'lideres.html');
-pageRoute('/treinamentos', 'treinamentos.html');
-pageRoute('/feedbacks', 'feedbacks.html');
-pageRoute('/avaliacoes', 'avaliacoes.html');
-pageRoute('/pdi', 'pdi.html');
-
-// Redirecionar root para login
-app.get('/', (req, res) => {
-  res.redirect('/login');
-});
+// OBS: o servidor HTTP e o serviço de frontend estático foram movidos para src/server.js
 
 // Handler de erros deve ser o último
 app.use(errorHandler);

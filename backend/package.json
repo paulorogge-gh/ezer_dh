@@ -4,7 +4,7 @@
   "description": "Backend API para Ezer Desenvolvimento Humano",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "node src/server.js",
     "dev": "nodemon src/app.js",
     "test": "jest",
     "build": "echo 'No build step for backend (no compilation)'",
