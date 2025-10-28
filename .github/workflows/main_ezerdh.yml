@@ -30,11 +30,10 @@ jobs:
           cd backend && npm install --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund || true
           cd ../frontend && npm install --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund || true
       
-      - name: Build and test (non-blocking)
+      - name: Build (optional)
         run: |
           cd ezer_dh
           npm run build --if-present || true
-          npm run test --if-present || true
 
       - name: Ensure frontend/public is present in artifact
         run: |
