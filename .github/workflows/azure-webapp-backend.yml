@@ -24,6 +24,11 @@ jobs:
           cd backend && npm ci || true
           cd ../frontend && npm ci || true
 
+      - name: Ensure frontend/public exists in package
+        working-directory: ezer_dh
+        run: |
+          ls -la frontend/public || (echo "frontend/public não encontrado no pacote. Verifique caminho." && exit 1)
+
       - name: Deploy to Azure Web App (zip root)
         uses: azure/webapps-deploy@v2
         with:
@@ -32,3 +37,4 @@ jobs:
           package: ezer_dh
 
 
+git add .

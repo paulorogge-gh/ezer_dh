@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const { logRequest, errorHandler, logger } = require('./utils/logger');
@@ -54,14 +55,35 @@ app.use('/api', apiLimiter);
 // Montagem das rotas da API
 app.use('/api', apiRoutes);
 
-// Servir frontend estático a partir de ezer_dh/frontend/public (um único Web App)
-const FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
-app.use(express.static(FRONTEND_PUBLIC));
+// Servir frontend estático (um único Web App)
+function resolveFrontendPublicDir() {
+  const candidates = [
+    path.join(__dirname, '../../frontend/public'), // estrutura esperada ao publicar root
+    path.join(process.cwd(), 'frontend/public'),    // fallback por cwd
+    path.join(__dirname, '../public'),             // antigo local
+    path.join(process.cwd(), 'public')             // outro fallback
+  ];
+  for (const p of candidates) {
+    try { if (fs.existsSync(p)) return p; } catch {}
+  }
+  return null;
+}
+const FRONTEND_PUBLIC = resolveFrontendPublicDir();
+if (FRONTEND_PUBLIC) {
+  app.use(express.static(FRONTEND_PUBLIC));
+} else {
+  console.warn('⚠️ Diretório do frontend público não encontrado. Verifique se "frontend/public" foi publicado.');
+}
 
 // Mapear rotas amigáveis para páginas front
 const pageRoute = (routePath, fileName) => {
   app.get(routePath, (req, res) => {
-    res.sendFile(path.join(FRONTEND_PUBLIC, fileName));
+    if (!FRONTEND_PUBLIC) return res.status(500).send('Frontend não disponível');
+    const filePath = path.join(FRONTEND_PUBLIC, fileName);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: { code: 'ENOENT', message: `Arquivo não encontrado: ${filePath}` } });
+    }
+    res.sendFile(filePath);
   });
 };
 pageRoute('/login', 'login.html');

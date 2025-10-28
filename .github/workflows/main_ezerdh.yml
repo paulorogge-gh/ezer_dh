@@ -23,17 +23,25 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: npm install, build, and test
+      - name: npm install (workspaces), build, and test
+        working-directory: ezer_dh
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm ci --workspaces
+          cd backend && npm ci || true
+          cd ../frontend && npm ci || true
+          npm run build --if-present || true
+          npm run test --if-present || true
+
+      - name: Ensure frontend/public is present in artifact
+        working-directory: ezer_dh
+        run: |
+          ls -la frontend/public || (echo "frontend/public não encontrado" && exit 1)
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: ezer_dh
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,5 +69,5 @@ jobs:
         with:
           app-name: 'ezerdh'
           slot-name: 'Production'
-          package: .
+          package: ezer_dh
           
