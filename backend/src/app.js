@@ -59,7 +59,9 @@ app.use('/api', apiRoutes);
 function resolveFrontendPublicDir() {
   const candidates = [
     path.join(__dirname, '../../frontend/public'), // estrutura esperada ao publicar root
+    path.join(__dirname, '../../../ezer_dh/frontend/public'), // estrutura quando repo possui pasta ezer_dh na raiz
     path.join(process.cwd(), 'frontend/public'),    // fallback por cwd
+    path.join(process.cwd(), 'ezer_dh/frontend/public'), // cwd com pasta ezer_dh
     path.join(__dirname, '../public'),             // antigo local
     path.join(process.cwd(), 'public')             // outro fallback
   ];
