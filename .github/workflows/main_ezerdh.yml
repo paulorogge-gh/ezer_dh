@@ -25,25 +25,23 @@ jobs:
 
       - name: npm install (root/backend/frontend)
         run: |
-          cd ezer_dh
           npm install --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund
           cd backend && npm install --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund || true
           cd ../frontend && npm install --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund || true
       
       - name: Build (optional)
         run: |
-          cd ezer_dh
           npm run build --if-present || true
 
       - name: Ensure frontend/public is present in artifact
         run: |
-          ls -la ezer_dh/frontend/public || (echo "frontend/public não encontrado" && exit 1)
+          ls -la frontend/public || (echo "frontend/public não encontrado" && exit 1)
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ezer_dh
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -71,5 +69,5 @@ jobs:
         with:
           app-name: 'ezerdh'
           slot-name: 'Production'
-          package: ezer_dh
+          package: .
           
