@@ -33,13 +33,6 @@ jobs:
         run: |
           npm run build --if-present || true
 
-      - name: Bundle frontend into backend (static assets)
-        run: |
-          set -e
-          test -d ezer_dh/frontend/public
-          rm -rf ezer_dh/backend/public
-          mkdir -p ezer_dh/backend/public
-          cp -R ezer_dh/frontend/public/. ezer_dh/backend/public/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
