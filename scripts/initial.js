@@ -78,8 +78,8 @@ const structure = {
                 'cards.html'
             ],
             'pages': [
-                'login-minimal.html',
-                'dashboard-minimal.html',
+                'login.html',
+                'dashboard.html',
                 'colaboradores.html',
                 'departamentos.html',
                 'ocorrencias.html',
@@ -95,7 +95,7 @@ const structure = {
             'js': [],
             'img': [],
             'fonts': [],
-            'index-minimal.html': null
+            'index.html': null
         },
         'package.json': null
     },

@@ -46,7 +46,7 @@ curl http://localhost:8000/api/health
 - `backend/src/app.js`: servidor Express, CORS, logs, health
 - `backend/src/routes/index.js`: agregador de rotas `/api/*`
 - `backend/src/utils/constants.js`: constantes únicas do sistema
-- `frontend/server.js`: servidor estático do frontend (rotas sem `-minimal`)
+- `frontend/server.js`: servidor estático do frontend
 
 ## Logs
 Logs de requisição, resposta e erro aplicados em endpoints críticos.

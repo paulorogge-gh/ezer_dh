@@ -189,7 +189,8 @@ const checkEmpresaAccess = async (req, empresaId) => {
                     return usuario.id_empresa == empresaId;
                 }
                 if (usuario.tipo_usuario === 'colaborador') {
-                    const col = await Colaborador.findById(usuario.id_referencia);
+                    const colId = usuario.id_colaborador || usuario.id_referencia;
+                    const col = await Colaborador.findById(colId);
                     return !!(col && col.id_empresa == empresaId);
                 }
                 // consultoria não pertence a empresa

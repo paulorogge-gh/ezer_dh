@@ -15,6 +15,8 @@ async function createTables() {
                 senha VARCHAR(255) NOT NULL,
                 tipo_usuario ENUM('consultoria','empresa','colaborador') NOT NULL,
                 id_referencia INT NOT NULL,
+                id_empresa INT NULL,
+                id_colaborador INT NULL,
                 status ENUM('Ativo','Inativo') DEFAULT 'Ativo',
                 ultimo_login TIMESTAMP NULL,
                 tentativas_login INT DEFAULT 0,
@@ -24,10 +26,28 @@ async function createTables() {
                 
                 INDEX idx_email (email),
                 INDEX idx_tipo_referencia (tipo_usuario, id_referencia),
-                INDEX idx_status (status)
+                INDEX idx_status (status),
+                INDEX idx_usuario_id_empresa (id_empresa),
+                INDEX idx_usuario_id_colaborador (id_colaborador)
             )
         `);
         console.log('✅ Tabela usuario criada!');
+
+        // Garantir FKs (tolerar ambiente que já tenha FKs criadas)
+        try {
+            await pool.execute('ALTER TABLE usuario ADD CONSTRAINT fk_usuario_empresa FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa)');
+        } catch (error) {
+            if (!String(error.message).toLowerCase().includes('duplicate')) {
+                console.warn('⚠️  Não foi possível criar FK fk_usuario_empresa:', error.message);
+            }
+        }
+        try {
+            await pool.execute('ALTER TABLE usuario ADD CONSTRAINT fk_usuario_colaborador FOREIGN KEY (id_colaborador) REFERENCES colaborador(id_colaborador)');
+        } catch (error) {
+            if (!String(error.message).toLowerCase().includes('duplicate')) {
+                console.warn('⚠️  Não foi possível criar FK fk_usuario_colaborador:', error.message);
+            }
+        }
         
         // Tabela consultoria
         console.log('📊 Criando tabela consultoria...');
@@ -222,6 +242,25 @@ async function createTables() {
         `);
         console.log('✅ Tabela treinamento criada!');
         
+        // Tabela treinamento_anexo (índice de anexos)
+        console.log('📊 Criando tabela treinamento_anexo...');
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS treinamento_anexo (
+                id_anexo INT AUTO_INCREMENT PRIMARY KEY,
+                id_treinamento INT NOT NULL,
+                url VARCHAR(1024) NOT NULL,
+                nome_arquivo VARCHAR(512) NOT NULL,
+                content_type VARCHAR(128),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (id_treinamento) REFERENCES treinamento(id_treinamento) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ Tabela treinamento_anexo criada!');
+
+        // Índices de treinamento_anexo
+        try { await pool.execute('CREATE INDEX idx_treinamento_anexo_treinamento ON treinamento_anexo(id_treinamento)'); } catch (error) { if (error.code !== 'ER_DUP_KEYNAME') console.log('⚠️  Índice idx_treinamento_anexo_treinamento já existe ou houve erro'); }
+        try { await pool.execute('CREATE INDEX idx_treinamento_anexo_url ON treinamento_anexo(url(255))'); } catch (error) { if (error.code !== 'ER_DUP_KEYNAME') console.log('⚠️  Índice idx_treinamento_anexo_url já existe ou houve erro'); }
+
         // Tabela feedback
         console.log('📊 Criando tabela feedback...');
         await pool.execute(`
@@ -348,6 +387,15 @@ async function createTables() {
             ('maria.santos@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'colaborador', 1),
             ('pedro.oliveira@empresaexemplo.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J4j4j4j4j', 'colaborador', 2)
         `);
+
+        // Popular id_empresa e id_colaborador após inserir usuários de exemplo
+        try {
+            await pool.execute('UPDATE usuario SET id_empresa = id_referencia WHERE tipo_usuario = "empresa"');
+            await pool.execute('UPDATE usuario u JOIN colaborador c ON c.id_colaborador = u.id_referencia SET u.id_empresa = c.id_empresa WHERE u.tipo_usuario = "colaborador"');
+            await pool.execute('UPDATE usuario SET id_colaborador = id_referencia WHERE tipo_usuario = "colaborador" AND (id_colaborador IS NULL OR id_colaborador = 0)');
+        } catch (error) {
+            console.warn('⚠️  Falha ao popular id_empresa/id_colaborador:', error.message);
+        }
 
         // Inserir líder de exemplo e relações
         await pool.execute(`

@@ -10,6 +10,7 @@ class Usuario {
         this.tipo_usuario = data.tipo_usuario;
         this.id_referencia = data.id_referencia;
         this.id_empresa = data.id_empresa;
+        this.id_colaborador = data.id_colaborador; // novo campo
         this.status = data.status;
         this.ultimo_login = data.ultimo_login;
         this.tentativas_login = data.tentativas_login;
@@ -28,8 +29,8 @@ class Usuario {
         const senhaHash = await bcrypt.hash(usuarioData.senha, 12);
         
         const sql = `
-            INSERT INTO usuario (email, nome, senha, tipo_usuario, id_referencia, id_empresa, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO usuario (email, nome, senha, tipo_usuario, id_referencia, id_empresa, id_colaborador, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         
         const values = [
@@ -39,6 +40,7 @@ class Usuario {
             usuarioData.tipo_usuario,
             usuarioData.id_referencia,
             usuarioData.id_empresa || null,
+            usuarioData.id_colaborador || null,
             usuarioData.status || 'Ativo'
         ];
         
@@ -284,7 +286,7 @@ class Usuario {
                     SELECT u.*, col.nome, col.cpf, col.cargo, col.status as status_colaborador,
                            e.nome as empresa_nome, c.nome as consultoria_nome
                     FROM usuario u
-                    JOIN colaborador col ON col.id_colaborador = u.id_referencia
+                    JOIN colaborador col ON col.id_colaborador = COALESCE(u.id_colaborador, u.id_referencia)
                     JOIN empresa e ON e.id_empresa = col.id_empresa
                     JOIN consultoria c ON c.id_consultoria = e.id_consultoria
                     WHERE u.id_usuario = ?

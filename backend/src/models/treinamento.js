@@ -12,18 +12,24 @@ class Treinamento {
         this.observacoes = data.observacoes;
         this.created_at = data.created_at;
         this.updated_at = data.updated_at;
+    // Campos agregados / alias de joins
+    this.colaborador_nome = data.colaborador_nome;
+    this.empresa_nome = data.empresa_nome;
+    this.attachments_count = typeof data.attachments_count !== 'undefined' ? data.attachments_count : 0;
     }
 
     // Buscar todos os treinamentos
     static async findAll() {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome FROM treinamento t ' +
-                'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
-                'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
-                'ORDER BY t.data_inicio DESC'
-            );
+      const [rows] = await pool.execute(
+        'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome, ' +
+        '  (SELECT COUNT(*) FROM treinamento_anexo a WHERE a.id_treinamento = t.id_treinamento) AS attachments_count ' +
+        'FROM treinamento t ' +
+        'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
+        'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
+        'ORDER BY t.data_inicio DESC'
+      );
             return rows.map(row => new Treinamento(row));
         } catch (error) {
             throw new Error(`Erro ao buscar treinamentos: ${error.message}`);
@@ -34,13 +40,15 @@ class Treinamento {
     static async findById(id) {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome FROM treinamento t ' +
-                'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
-                'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
-                'WHERE t.id_treinamento = ?',
-                [id]
-            );
+      const [rows] = await pool.execute(
+        'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome, ' +
+        '  (SELECT COUNT(*) FROM treinamento_anexo a WHERE a.id_treinamento = t.id_treinamento) AS attachments_count ' +
+        'FROM treinamento t ' +
+        'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
+        'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
+        'WHERE t.id_treinamento = ?',
+        [id]
+      );
             return rows.length > 0 ? new Treinamento(rows[0]) : null;
         } catch (error) {
             throw new Error(`Erro ao buscar treinamento: ${error.message}`);
@@ -51,10 +59,12 @@ class Treinamento {
     static async findByColaborador(id_colaborador) {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT * FROM treinamento WHERE id_colaborador = ? ORDER BY data_inicio DESC',
-                [id_colaborador]
-            );
+      const [rows] = await pool.execute(
+        'SELECT t.*, ' +
+        '  (SELECT COUNT(*) FROM treinamento_anexo a WHERE a.id_treinamento = t.id_treinamento) AS attachments_count ' +
+        'FROM treinamento t WHERE t.id_colaborador = ? ORDER BY t.data_inicio DESC',
+        [id_colaborador]
+      );
             return rows.map(row => new Treinamento(row));
         } catch (error) {
             throw new Error(`Erro ao buscar treinamentos do colaborador: ${error.message}`);
@@ -65,13 +75,15 @@ class Treinamento {
     static async findByCategoria(categoria) {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome FROM treinamento t ' +
-                'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
-                'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
-                'WHERE t.categoria = ? ORDER BY t.data_inicio DESC',
-                [categoria]
-            );
+      const [rows] = await pool.execute(
+        'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome, ' +
+        '  (SELECT COUNT(*) FROM treinamento_anexo a WHERE a.id_treinamento = t.id_treinamento) AS attachments_count ' +
+        'FROM treinamento t ' +
+        'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
+        'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
+        'WHERE t.categoria = ? ORDER BY t.data_inicio DESC',
+        [categoria]
+      );
             return rows.map(row => new Treinamento(row));
         } catch (error) {
             throw new Error(`Erro ao buscar treinamentos por categoria: ${error.message}`);
@@ -82,13 +94,15 @@ class Treinamento {
     static async findEmAndamento() {
         try {
             const pool = getPool();
-            const [rows] = await pool.execute(
-                'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome FROM treinamento t ' +
-                'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
-                'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
-                'WHERE t.data_inicio <= CURDATE() AND t.data_fim >= CURDATE() ' +
-                'ORDER BY t.data_fim ASC'
-            );
+      const [rows] = await pool.execute(
+        'SELECT t.*, c.nome as colaborador_nome, e.nome as empresa_nome, ' +
+        '  (SELECT COUNT(*) FROM treinamento_anexo a WHERE a.id_treinamento = t.id_treinamento) AS attachments_count ' +
+        'FROM treinamento t ' +
+        'JOIN colaborador c ON t.id_colaborador = c.id_colaborador ' +
+        'JOIN empresa e ON c.id_empresa = e.id_empresa ' +
+        'WHERE t.data_inicio <= CURDATE() AND t.data_fim >= CURDATE() ' +
+        'ORDER BY t.data_fim ASC'
+      );
             return rows.map(row => new Treinamento(row));
         } catch (error) {
             throw new Error(`Erro ao buscar treinamentos em andamento: ${error.message}`);
