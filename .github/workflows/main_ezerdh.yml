@@ -23,8 +23,7 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: npm install (root ezer_dh), build, and test
-        working-directory: ezer_dh
+      - name: npm install (repo root), build, and test
         run: |
           npm ci
           npm run build --if-present
@@ -34,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ezer_dh
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -62,5 +61,5 @@ jobs:
         with:
           app-name: 'ezerdh'
           slot-name: 'Production'
-          package: ezer_dh
+          package: .
           
