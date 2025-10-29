@@ -19,13 +19,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+          cache: 'npm'
+
+      - name: Show repository structure (pre-install)
+        run: |
+          pwd
+          ls -la
 
       - name: npm install (repo root), build, and test
         run: |
           npm ci
+          npm ci --prefix backend
+          npm ci --prefix frontend
+          ls -la backend
+          ls -la frontend
           npm run build --if-present
           npm run test --if-present
 
@@ -34,6 +44,7 @@ jobs:
         with:
           name: node-app
           path: .
+          if-no-files-found: error
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,6 +58,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+      - name: Show artifact contents (post-download)
+        run: |
+          pwd
+          ls -la
+          ls -la backend || true
+          ls -la frontend || true
       
       - name: Login to Azure
         uses: azure/login@v2
