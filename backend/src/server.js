@@ -3,8 +3,16 @@ const app = require('./app');
 
 const PORT = parseInt(process.env.PORT || process.env.PORT_API, 10) || 8000;
 
-// Servir frontend estático a partir de ezer_dh/frontend/public
-const FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
+// Servir frontend estático a partir de ../frontend/public (robusto para Azure)
+const fs = require('fs');
+let FRONTEND_PUBLIC = path.join(__dirname, '../../frontend/public');
+try {
+  if (!fs.existsSync(FRONTEND_PUBLIC)) {
+    // Fallback quando a estrutura de deploy coloca backend como cwd
+    const alt = path.resolve(process.cwd(), '../frontend/public');
+    if (fs.existsSync(alt)) FRONTEND_PUBLIC = alt;
+  }
+} catch {}
 app.use(require('express').static(FRONTEND_PUBLIC));
 
 // Mapear rotas amigáveis para páginas front
@@ -27,9 +35,9 @@ pageRoute('/feedbacks', 'feedbacks.html');
 pageRoute('/avaliacoes', 'avaliacoes.html');
 pageRoute('/pdi', 'pdi.html');
 
-// Redirecionar root para login
+// Index com botão para login
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  res.sendFile(path.join(FRONTEND_PUBLIC, 'index.html'));
 });
 
 const server = app.listen(PORT, () => {

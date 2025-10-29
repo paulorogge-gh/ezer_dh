@@ -59,43 +59,6 @@ app.use('/api', apiRoutes);
 // Handler de erros deve ser o último
 app.use(errorHandler);
 
-const server = app.listen(PORT, () => {
-  console.log('🚀 ================================================');
-  console.log('   EZER DESENVOLVIMENTO HUMANO - BACKEND API');
-  console.log('🚀 ================================================');
-  console.log(`🔧 Servidor rodando em: http://localhost:${PORT}`);
-  console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-  console.log(`🔧 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`⏱️ Iniciado em: ${new Date().toLocaleString('pt-BR')}`);
-  console.log('🚀 ================================================');
-});
-
-function gracefulShutdown(signal) {
-  console.log(`\n🔄 Recebido sinal ${signal}. Encerrando servidor...`);
-  server.close(() => {
-    console.log('✅ Servidor encerrado graciosamente');
-    process.exit(0);
-  });
-  setTimeout(() => {
-    console.log('⚠️ Forçando encerramento do servidor...');
-    process.exit(1);
-  }, 10000);
-}
-
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2'));
-
-process.on('uncaughtException', (error) => {
-  console.error('💥 Erro não tratado:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason) => {
-  console.error('💥 Promise rejeitada não tratada:', reason);
-  process.exit(1);
-});
-
 module.exports = app;
 
 
