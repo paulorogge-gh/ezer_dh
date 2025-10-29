@@ -8,13 +8,14 @@ Plataforma de gestão de pessoas e desenvolvimento humano.
 
 ## Instalação
 ```bash
-# Instalar dependências de todos os módulos
-npm run install:all
+# Instalar dependências do projeto unificado
+npm ci
 ```
 
 ## Configuração
-Crie o arquivo `backend/.env` baseado em `backend/env.example`:
+Crie o arquivo `.env` na raiz baseado em `.env.example`:
 ```env
+PORT=8000
 PORT_API=8000
 DB_HOST=<seu_host_azure_mysql>
 DB_PORT=3306
@@ -28,14 +29,16 @@ CORS_ORIGIN=http://localhost:8080
 AZURE_STORAGE_CONNECTION_STRING=<sua_connection_string_do_storage>
 ```
 
-Para testes, existe `backend/.env.test` com variáveis mínimas.
+Para testes, crie `.env.test` com variáveis mínimas.
 
 ## Execução
-Use o script de inicialização para subir backend e frontend:
+Inicie o servidor unificado (backend + frontend estático):
 ```bash
-./start.sh
+npm start
+# modo desenvolvimento (hot reload):
+npm run dev
 ```
-Frontend estará em `http://localhost:8080` e API em `http://localhost:8000`.
+Aplicação estará em `http://localhost:8000` e Health em `http://localhost:8000/api/health`.
 
 ### Health Check
 ```bash
@@ -43,10 +46,9 @@ curl http://localhost:8000/api/health
 ```
 
 ## Estrutura
-- `backend/src/app.js`: servidor Express, CORS, logs, health
-- `backend/src/routes/index.js`: agregador de rotas `/api/*`
-- `backend/src/utils/constants.js`: constantes únicas do sistema
-- `frontend/server.js`: servidor estático do frontend
+- `src/server.js`: servidor Express unificado, CORS, logs, health, rotas `/api/*` e páginas estáticas de `public/`
+- `src/routes/index.js`: agregador de rotas `/api/*`
+- `src/utils/logger.js`: logger, middleware de request e handler de erros
 
 ## Logs
 Logs de requisição, resposta e erro aplicados em endpoints críticos.

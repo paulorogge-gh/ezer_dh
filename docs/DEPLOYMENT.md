@@ -12,8 +12,8 @@
 ### 1. Instalar dependências
 
 ```bash
-# Instalar dependências de todos os módulos
-npm run install:all
+# Instalar dependências do projeto unificado
+npm ci
 ```
 
 ### 2. Configurar variáveis de ambiente
@@ -41,8 +41,8 @@ mysql -u root -p < database/ezer_dh.sql
 # Instalar PM2 globalmente
 npm install -g pm2
 
-# Iniciar aplicação
-pm2 start backend/src/app.js --name "ezer-dh-api"
+# Iniciar aplicação (servidor unificado)
+pm2 start src/server.js --name "ezer-dh"
 
 # Configurar para iniciar automaticamente
 pm2 startup
@@ -62,7 +62,7 @@ After=network.target
 Type=simple
 User=www-data
 WorkingDirectory=/var/www/html/ezer_dh
-ExecStart=/usr/bin/node backend/src/app.js
+ExecStart=/usr/bin/node src/server.js
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
@@ -86,9 +86,9 @@ server {
     listen 80;
     server_name server01.paulorogge.com.br;
 
-    # Frontend
+    # Frontend estático (servido pelo Node ou direto pelo Nginx)
     location / {
-        root /var/www/html/ezer_dh/frontend/public;
+        root /var/www/html/ezer_dh/public;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
@@ -153,7 +153,7 @@ mysqldump -u root -p --no-data ezer_dh > structure_backup.sql
 
 ```bash
 # Backup dos uploads
-tar -czf uploads_backup_$(date +%Y%m%d_%H%M%S).tar.gz backend/public/uploads/
+tar -czf uploads_backup_$(date +%Y%m%d_%H%M%S).tar.gz public/uploads/
 ```
 
 ## Troubleshooting

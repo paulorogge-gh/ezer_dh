@@ -5,8 +5,8 @@ module.exports = {
     '**/tests/**/*.spec.js'
   ],
   collectCoverageFrom: [
-    'backend/src/**/*.js',
-    '!backend/src/app.js',
+    'src/**/*.js',
+    '!src/server.js',
     '!**/node_modules/**'
   ],
   coverageDirectory: 'coverage',

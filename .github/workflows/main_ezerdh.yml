@@ -29,13 +29,9 @@ jobs:
           pwd
           ls -la
 
-      - name: npm install (repo root), build, and test
+      - name: Install dependencies, build, and test (unified project)
         run: |
           npm ci
-          npm ci --prefix backend
-          npm ci --prefix frontend
-          ls -la backend
-          ls -la frontend
           npm run build --if-present
           npm run test --if-present
 
@@ -62,8 +58,6 @@ jobs:
         run: |
           pwd
           ls -la
-          ls -la backend || true
-          ls -la frontend || true
       
       - name: Login to Azure
         uses: azure/login@v2
