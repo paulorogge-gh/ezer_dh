@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PDI - Ezer DH</title>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/minimal.css" rel="stylesheet">
+    <style>
+        .dev-status { display:flex; align-items:center; gap:16px; padding:18px 20px; border:1px solid rgba(0,0,0,0.06); border-radius:14px; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06); }
+        .dev-status .dev-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #8b5e34, #a06a3b); color:#fff; animation: pulseGlow 2.4s ease-in-out infinite; }
+        .dev-status .dev-title { font-weight:600; color: var(--gray-800); font-size:1.1rem; }
+        .dev-status .dev-subtitle { color:#64748b; font-size:.9rem; margin-top:2px; }
+        .dev-status .dev-chip { margin-left:auto; font-size:.75rem; font-weight:600; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid rgba(0,0,0,0.06); color:#334155; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(160,106,59,.35);} 70% { box-shadow: 0 0 0 14px rgba(160,106,59,0);} 100% { box-shadow: 0 0 0 0 rgba(160,106,59,0);} }
+    </style>
+</head>
+<body>
+    <div id="sidebar-placeholder"></div>
+    <div id="topbar-placeholder"></div>
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/confirm.js"></script>
+    <script src="/js/rbac.js"></script>
+    <main class="main-content" id="mainContent">
+        <div class="content-area">
+            <div class="welcome-card">
+                <h4 class="welcome-title title-sm">PDI</h4>
+                <p class="welcome-text" style="font-size: .9rem;">Plano de Desenvolvimento Individual</p>
+            </div>
+            <!-- <div class="card"><div class="card-body">Conteúdo de PDI</div></div> -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="dev-status">
+                        <div class="dev-icon"><i class="bi bi-tools"></i></div>
+                        <div class="dev-content">
+                            <div class="dev-title">Em desenvolvimento</div>
+                            <div class="dev-subtitle">Estamos construindo esta funcionalidade. Em breve você poderá gerenciar PDIs aqui.</div>
+                        </div>
+                        <div class="dev-chip">Preview</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+
+

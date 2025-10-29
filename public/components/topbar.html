@@ -1,0 +1,38 @@
+<header class="topbar">
+    <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1 class="page-title">Página</h1>
+    </div>
+    <div class="topbar-right">
+    <div class="user-menu">
+            <button class="user-button" type="button" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <span id="userName">Usuário</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="user-dropdown" style="display:none; position:absolute; right:0; top:100%; background:white; border:1px solid rgba(0,0,0,0.08); border-radius:10px; min-width:180px; box-shadow:0 8px 20px rgba(0,0,0,0.10); overflow:hidden;">
+                <div style="padding:8px 10px; border-bottom:1px solid rgba(0,0,0,0.06);">
+                    <div style="font-weight:600; color: var(--gray-800); font-size:.85rem;" id="dropdownUserName">Usuário</div>
+                    <div style="color: var(--gray-500); font-size:.72rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="dropdownUserEmail">email@dominio.com</div>
+                </div>
+                <a href="/perfil.html" class="d-block" style="padding:8px 10px; color: var(--gray-700); display:flex; align-items:center; gap:8px; text-decoration:none; font-size:.85rem;">
+                    <i class="bi bi-person" style="font-size:1rem;"></i>
+                    <span>Perfil</span>
+                </a>
+                <a href="/configuracoes.html" class="d-block" style="padding:8px 10px; color: var(--gray-700); display:flex; align-items:center; gap:8px; text-decoration:none; font-size:.85rem;">
+                    <i class="bi bi-gear" style="font-size:1rem;"></i>
+                    <span>Configurações</span>
+                </a>
+                <div class="dropdown-divider" style="margin:4px 0; border-top:1px solid rgba(0,0,0,0.06);"></div>
+                <a href="#" id="user-logout-btn" role="button" class="d-block" style="padding:8px 10px; color: var(--error-600); display:flex; align-items:center; gap:8px; text-decoration:none; font-size:.85rem;">
+                    <i class="bi bi-box-arrow-right" style="font-size:1rem;"></i>
+                    <span>Sair</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ezer DH - Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/minimal.css" rel="stylesheet">
+    
+    <style>
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--gray-200);
+            padding: var(--space-6);
+            z-index: 1000;
+            transition: transform var(--transition-normal);
+        }
+        
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+        
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: var(--space-8);
+            padding-bottom: 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+        
+        .logo-icon {
+            width: calc(var(--topbar-height) - 16px);
+            height: calc(var(--topbar-height) - 16px);
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin: 0;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nav-item {
+            margin-bottom: var(--space-2);
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .nav-link:hover {
+            background: var(--primary-50);
+            color: var(--primary-600);
+            transform: translateX(4px);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: var(--gray-50);
+            transition: margin-left var(--transition-normal);
+        }
+        
+        .main-content.expanded {
+            margin-left: 0;
+        }
+        
+        .topbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gray-200);
+            height: var(--topbar-height);
+            padding: 0 var(--space-6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: var(--gray-600);
+            cursor: pointer;
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .menu-toggle:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        
+        .user-menu {
+            position: relative;
+        }
+        
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: none;
+            border: none;
+            color: var(--gray-700);
+            cursor: pointer;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+        }
+        
+        .user-button:hover {
+            background: var(--gray-100);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .content-area {
+            padding: var(--space-8);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+        
+        .stat-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-500), var(--primary-300));
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon.primary {
+            background: var(--primary-50);
+            color: var(--primary-600);
+        }
+        
+        .stat-icon.success {
+            background: var(--success-50);
+            color: var(--success-600);
+        }
+        
+        .stat-icon.warning {
+            background: var(--warning-50);
+            color: var(--warning-600);
+        }
+        
+        .stat-icon.info {
+            background: var(--primary-50);
+            color: var(--primary-600);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin: var(--space-1) 0 0 0;
+        }
+        
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: var(--space-2);
+        }
+        
+        .stat-change.positive {
+            color: var(--success-600);
+        }
+        
+        .stat-change.negative {
+            color: var(--error-600);
+        }
+        
+        .welcome-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            margin-bottom: var(--space-8);
+            text-align: center;
+        }
+        
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-6);
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+        
+        .welcome-text {
+            color: var(--gray-600);
+            font-size: 1rem;
+            margin-bottom: var(--space-6);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            font-weight: 500;
+        }
+        
+        .action-btn:hover {
+            background: var(--primary-50);
+            border-color: var(--primary-200);
+            color: var(--primary-700);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-100);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-600);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar component placeholder -->
+    <div id="sidebar-placeholder"></div>
+    <!-- Topbar component placeholder -->
+    <div id="topbar-placeholder"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Topbar injected via components/topbar.html -->
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Welcome Card -->
+            <div class="welcome-card animate-fade-in">
+                <div class="welcome-icon">
+                    <i class="bi bi-hand-thumbs-up"></i>
+                </div>
+                <h2 class="welcome-title">Bem-vindo ao Ezer DH!</h2>
+                <p class="welcome-text">
+                    Sistema de gestão de pessoas e desenvolvimento humano. 
+                    Aqui você pode gerenciar colaboradores, departamentos, ocorrências, 
+                    treinamentos, feedbacks e avaliações de desempenho.
+                </p>
+            </div>
+            
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card animate-slide-up">
+                    <div class="stat-header">
+                        <div class="stat-icon primary">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                    <h3 class="stat-value blurred" id="totalColaboradores">25</h3>
+                    <p class="stat-label">Total de Colaboradores</p>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> +12% este mês
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-slide-up" style="animation-delay: 0.1s;">
+                    <div class="stat-header">
+                        <div class="stat-icon success">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h3 class="stat-value blurred" id="ocorrenciasMes">3</h3>
+                    <p class="stat-label">Ocorrências Este Mês</p>
+                    <div class="stat-change negative">
+                        <i class="bi bi-arrow-down"></i> -3% este mês
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-slide-up" style="animation-delay: 0.2s;">
+                    <div class="stat-header">
+                        <div class="stat-icon info">
+                            <i class="bi bi-book"></i>
+                        </div>
+                    </div>
+                    <h3 class="stat-value blurred" id="treinamentosAtivos">8</h3>
+                    <p class="stat-label">Treinamentos Ativos</p>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> +5 esta semana
+                    </div>
+                </div>
+                
+                <div class="stat-card animate-slide-up" style="animation-delay: 0.3s;">
+                    <div class="stat-header">
+                        <div class="stat-icon warning">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                    </div>
+                    <h3 class="stat-value blurred" id="feedbacksPendentes">12</h3>
+                    <p class="stat-label">Feedbacks Pendentes</p>
+                    <div class="stat-change positive">
+                        <i class="bi bi-arrow-up"></i> +2 hoje
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="margin: 0;">Ações Rápidas</h3>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <a href="#" class="action-btn">
+                            <div class="action-icon">
+                                <i class="bi bi-person-plus"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">Novo Colaborador</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Adicionar pessoa</div>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="action-btn">
+                            <div class="action-icon">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">Gerar Relatório</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Exportar dados</div>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="action-btn">
+                            <div class="action-icon">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">Configurações</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Ajustar sistema</div>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="action-btn">
+                            <div class="action-icon">
+                                <i class="bi bi-question-circle"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">Ajuda</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500);">Suporte técnico</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/alerts.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/ui.js"></script>
+</body>
+</html>
