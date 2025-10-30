@@ -151,6 +151,9 @@ window.deleteDepartamento = deleteDepartamento;
                     <button class="btn btn-secondary btn-sm" data-action="edit" data-id="${departamento.id_departamento}" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
+                    <button class="btn btn-secondary btn-sm" data-action="manage-members" data-id="${departamento.id_departamento}" title="Gerenciar Membros">
+                        <i class="bi bi-people"></i>
+                    </button>
                     <button class="btn-icon error" data-action="delete" data-id="${departamento.id_departamento}" title="Excluir">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -287,6 +290,139 @@ window.deleteDepartamento = deleteDepartamento;
         } catch { return []; }
     }
 
+    async function fetchEmpresaColaboradores(idEmpresa) {
+        try {
+            const resp = await auth.authenticatedRequest(`${apiBase}/empresas/${idEmpresa}/colaboradores`, { method: 'GET' });
+            const data = await resp.json();
+            return data.success ? (data.data || []) : [];
+        } catch { return []; }
+    }
+
+    function buildManageMembersHtml(departamento, membros, candidatos) {
+        const membrosItems = (membros || []).map(c => `
+            <div class="list-item" style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-weight:600; color:var(--gray-800);">${sanitizeText(c.nome || '')}</span>
+                    <span style="color:#64748b; font-size:.875rem;">${sanitizeText(c.email_corporativo || c.email_pessoal || '')}</span>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-icon error" data-action="remove-member" data-colaborador-id="${c.id_colaborador}"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+        const membrosList = membrosItems || '<div class="text-muted" style="font-size:.9rem;">Nenhum membro neste departamento.</div>';
+        const candidatosOptions = ['<option value="">Selecione um colaborador</option>']
+            .concat((candidatos || []).map(c => `<option value="${c.id_colaborador}">${sanitizeText(c.nome || '')}</option>`)).join('');
+        return `
+            <div class="form-grid">
+                <div class="form-field span-2">
+                    <label class="form-label" for="addColaboradorSelect">Adicionar colaborador</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select class="form-select form-control" id="addColaboradorSelect" name="colaborador_id" style="flex:1;">
+                            ${candidatosOptions}
+                        </select>
+                        <button type="button" class="btn btn-primary" data-action="add-member">Adicionar</button>
+                    </div>
+                    <div class="form-help" style="margin-top:6px;">A lista exibe colaboradores da empresa do departamento.</div>
+                </div>
+                <div class="form-field span-2">
+                    <label class="form-label">Membros do Departamento</label>
+                    <div id="membrosList" class="list" style="border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:8px 12px; max-height:320px; overflow:auto;">
+                        ${membrosList}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function openManageMembers(idDepartamento) {
+        try {
+            const container = document.body;
+            const pageLoader = window.EzerLoading ? EzerLoading.show(container) : { hide(){} };
+            const dep = await fetchDepartamentoById(idDepartamento);
+            const membros = await fetchDepartamentoColaboradores(idDepartamento);
+            const empresaId = dep?.id_empresa || null;
+            let candidatos = [];
+            if (empresaId) {
+                const todos = await fetchEmpresaColaboradores(empresaId);
+                const membrosIds = new Set((membros || []).map(m => m.id_colaborador));
+                candidatos = (todos || []).filter(c => !membrosIds.has(c.id_colaborador));
+            }
+            pageLoader.hide?.();
+            const html = buildManageMembersHtml(dep, membros, candidatos);
+            const modalRef = showFormModal({
+                title: `Gerenciar Membros — ${sanitizeText(dep?.nome || '')}`,
+                formHtml: html,
+                size: 'lg',
+                submitText: 'Fechar',
+                cancelText: 'Cancelar',
+                onSubmit: async (_form, close) => { close(); }
+            });
+            const root = modalRef?.el || document;
+            const membrosListEl = root.querySelector('#membrosList');
+            const selectEl = root.querySelector('#addColaboradorSelect');
+            // Adicionar membro
+            root.addEventListener('click', async (ev) => {
+                const addBtn = ev.target.closest('button[data-action="add-member"]');
+                const remBtn = ev.target.closest('button[data-action="remove-member"]');
+                if (addBtn) {
+                    const colaboradorId = Number(selectEl?.value || 0);
+                    if (!colaboradorId) { try { showAlert('warning', 'Selecione um colaborador'); } catch {} return; }
+                    const loader = window.EzerLoading ? EzerLoading.show(membrosListEl || document.body) : { hide(){} };
+                    try {
+                        const resp = await auth.authenticatedRequest(`${apiBase}/departamentos/${idDepartamento}/colaboradores`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaborador_id: colaboradorId })
+                        });
+                        const j = await resp.json();
+                        if (!j.success) throw new Error(j.error || 'Falha ao adicionar colaborador');
+                        // Atualizar UI: mover do select para lista
+                        const opt = selectEl.querySelector(`option[value="${colaboradorId}"]`);
+                        if (opt) opt.remove();
+                        const novoItemHtml = `
+                            <div class="list-item" style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="font-weight:600; color:var(--gray-800);">${sanitizeText(opt?.textContent || '')}</span>
+                                    <span style="color:#64748b; font-size:.875rem;"></span>
+                                </div>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn-icon error" data-action="remove-member" data-colaborador-id="${colaboradorId}"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                        `;
+                        membrosListEl.insertAdjacentHTML('beforeend', novoItemHtml);
+                        try { showAlert('success', 'Colaborador adicionado ao departamento'); } catch {}
+                    } catch (e) {
+                        console.error('add-member error:', e);
+                        try { showAlert('error', e.message || 'Erro ao adicionar colaborador'); } catch {}
+                    } finally { try { loader.hide(); } catch {} }
+                    return;
+                }
+                if (remBtn) {
+                    const colaboradorId = Number(remBtn.getAttribute('data-colaborador-id') || 0);
+                    if (!colaboradorId) return;
+                    const loader = window.EzerLoading ? EzerLoading.show(membrosListEl || document.body) : { hide(){} };
+                    try {
+                        const resp = await auth.authenticatedRequest(`${apiBase}/departamentos/${idDepartamento}/colaboradores/${colaboradorId}`, { method: 'DELETE' });
+                        const j = await resp.json();
+                        if (!j.success) throw new Error(j.error || 'Falha ao remover colaborador');
+                        remBtn.closest('.list-item')?.remove();
+                        // Re-adicionar ao select de candidatos (simples: inserir opção ao final)
+                        const opt = document.createElement('option'); opt.value = String(colaboradorId); opt.textContent = `Colaborador ${colaboradorId}`;
+                        selectEl.appendChild(opt);
+                        try { showAlert('success', 'Colaborador removido do departamento'); } catch {}
+                    } catch (e) {
+                        console.error('remove-member error:', e);
+                        try { showAlert('error', e.message || 'Erro ao remover colaborador'); } catch {}
+                    } finally { try { loader.hide(); } catch {} }
+                    return;
+                }
+            }, true);
+        } catch (e) {
+            console.error('openManageMembers error:', e);
+            try { showAlert('error', e.message || 'Erro ao gerenciar membros'); } catch {}
+        }
+    }
+
     async function viewDepartamento(id) {
         const [detalhes, stats, colaboradores] = await Promise.all([
             (async () => { const d = await fetchDepartamentoById(id); return d; })(),
@@ -421,6 +557,14 @@ window.deleteDepartamento = deleteDepartamento;
                     try { loader.hide(); } catch {}
                 } catch (e) {
                     try { showAlert('error', e.message || 'Erro ao carregar detalhes'); } catch { try { EzerNotifications?.error?.(e.message || 'Erro ao carregar detalhes'); } catch {} }
+                }
+            } else if (action === 'manage-members') {
+                try {
+                    const loader = window.EzerLoading ? EzerLoading.show(document.body) : { hide(){} };
+                    await openManageMembers(id);
+                    try { loader.hide(); } catch {}
+                } catch (e) {
+                    try { showAlert('error', e.message || 'Erro ao abrir gerenciamento de membros'); } catch { try { EzerNotifications?.error?.(e.message || 'Erro ao abrir gerenciamento de membros'); } catch {} }
                 }
             }
         });

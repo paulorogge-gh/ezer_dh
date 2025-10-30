@@ -74,7 +74,7 @@ function attachEvents() {
         if (!action || !id) return;
         const card = document.getElementById('treinamentosTable')?.closest('.card-body') || document.body;
         const loader = window.EzerLoading ? EzerLoading.show(card) : { hide(){} };
-        if (action === 'delete') return deleteTreinamento(id);
+        if (action === 'delete') { try { await deleteTreinamento(id); } finally { try { loader.hide(); } catch {} } return; }
         if (action === 'edit') { try { await editTreinamento(id); } finally { try { loader.hide(); } catch {} } return; }
         if (action === 'view') { try { await viewTreinamento(id); } finally { try { loader.hide(); } catch {} } return; }
         // botão de anexos foi removido das ações
@@ -432,6 +432,9 @@ async function editTreinamento(id) {
                     const r = await auth.authenticatedRequest(`${apiBase}/treinamentos/${id}/attachments`, { method: 'POST', body: formData });
                     const j = await r.json();
                     if (j.success) { await refreshAttachments(); }
+                } catch (e) {
+                    console.error('uploadImmediate error:', e);
+                    try { showAlert('error', e.message || 'Erro ao enviar anexos'); } catch {}
                 } finally { try { loader.hide(); } catch {} }
             }
             anexosDrop.addEventListener('click', () => anexosInput.click());
@@ -626,16 +629,15 @@ async function deleteTreinamento(id) {
         }) : Promise.resolve(confirm('Tem certeza que deseja excluir este treinamento?'))));
         if (!ok) return;
     } catch {}
+    const card = document.querySelector('#treinamentosTable')?.closest('.card') || document.body;
+    const loader = window.EzerLoading ? EzerLoading.show(card || undefined) : { hide(){} };
     try {
-        const card = document.querySelector('#treinamentosTable')?.closest('.card') || document.body;
-        const loader = window.EzerLoading ? EzerLoading.show(card || undefined) : { hide(){} };
         const resp = await auth.authenticatedRequest(`${apiBase}/treinamentos/${id}`, { method: 'DELETE' });
         const response = await resp.json();
         if (response.success) {
             if (window.loadTreinamentos) { try { await loadTreinamentos(); } catch {} }
             if (window.showAlert) { try { showAlert('success', 'Treinamento excluído com sucesso'); } catch {} }
             else { EzerNotifications?.success?.('Treinamento excluído com sucesso'); }
-            try { loader.hide(); } catch {}
         } else {
             if (window.showAlert) { try { showAlert('error', response.error || 'Erro ao excluir treinamento'); } catch {} }
             else { EzerNotifications?.error?.('Erro ao excluir treinamento'); }
@@ -643,7 +645,7 @@ async function deleteTreinamento(id) {
     } catch (error) {
         console.error('Erro ao excluir treinamento:', error);
         EzerNotifications?.error?.('Erro ao excluir treinamento');
-    }
+    } finally { try { loader.hide(); } catch {} }
 }
 
 window.deleteTreinamento = deleteTreinamento;
@@ -667,7 +669,6 @@ async function toggleTreinamentoStatus(id, nextStatus) {
             if (window.loadTreinamentos) { try { await loadTreinamentos(); } catch {} }
             if (window.showAlert) { try { showAlert('success', `Status alterado para ${nextStatus}`); } catch {} }
             else { EzerNotifications?.success?.(`Status alterado para ${nextStatus}`); }
-            try { loader.hide(); } catch {}
         } else {
             if (window.showAlert) { try { showAlert('error', response.error || 'Falha ao alterar status'); } catch {} }
             else { EzerNotifications?.error?.(response.error || 'Falha ao alterar status'); }
@@ -675,7 +676,7 @@ async function toggleTreinamentoStatus(id, nextStatus) {
     } catch (error) {
         console.error('Erro ao alterar status:', error);
         EzerNotifications?.error?.('Erro ao alterar status');
-    }
+    } finally { try { loader.hide(); } catch {} }
 }
 
 window.toggleTreinamentoStatus = toggleTreinamentoStatus;
