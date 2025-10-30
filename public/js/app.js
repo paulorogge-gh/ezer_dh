@@ -55,7 +55,7 @@ function updateUserInterface() {
 function updateInterfaceByRole(role) {
     // Ocultar elementos que o usuário não tem permissão
     const elementsToHide = {
-        'colaborador': ['.admin-only', '.empresa-only'],
+        'colaborador': ['.admin-only', '.empresa-only', '.consultoria-only'],
         'empresa': ['.consultoria-only'],
         'consultoria': []
     };

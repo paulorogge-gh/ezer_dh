@@ -1,5 +1,5 @@
 const { Feedback } = require('../models');
-const { logDatabase, logError } = require('../utils/logger');
+const { logDatabase, logError, logAudit } = require('../utils/logger');
 const { getPool } = require('../config/db');
 
 class FeedbackController {
@@ -107,6 +107,7 @@ class FeedbackController {
       const id = await Feedback.create(body);
       const novo = await Feedback.findById(id);
       logDatabase('INSERT', 'feedback', { id });
+      try { logAudit('create_feedback', req.user?.id, { id, id_avaliado: body.id_avaliado, classificacao: body.classificacao }, req.ip); } catch {}
       res.status(201).json({ success: true, data: novo, message: 'Feedback criado com sucesso' });
     } catch (error) {
       logError(error, req);
@@ -122,6 +123,7 @@ class FeedbackController {
       await item.update(req.body || {});
       const updated = await Feedback.findById(id);
       logDatabase('UPDATE', 'feedback', { id });
+      try { logAudit('update_feedback', req.user?.id, { id, changes: req.body || {} }, req.ip); } catch {}
       res.json({ success: true, data: updated, message: 'Feedback atualizado com sucesso' });
     } catch (error) {
       logError(error, req);
@@ -136,6 +138,7 @@ class FeedbackController {
       if (!item) return res.status(404).json({ success: false, error: 'Feedback não encontrado' });
       await item.delete();
       logDatabase('DELETE', 'feedback', { id });
+      try { logAudit('delete_feedback', req.user?.id, { id }, req.ip); } catch {}
       res.json({ success: true, message: 'Feedback deletado com sucesso' });
     } catch (error) {
       logError(error, req);

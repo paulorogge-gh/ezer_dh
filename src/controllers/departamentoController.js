@@ -1,5 +1,5 @@
 const { Departamento } = require('../models');
-const { logDatabase, logError } = require('../utils/logger');
+const { logDatabase, logError, logAudit } = require('../utils/logger');
 
 class DepartamentoController {
     /**
@@ -79,6 +79,7 @@ class DepartamentoController {
 
             const departamentoId = await Departamento.create(departamentoData);
             const departamento = await Departamento.findById(departamentoId);
+            try { logAudit(req.user?.id, 'create', 'departamento', departamentoId, { nome: departamento?.nome, id_empresa: departamento?.id_empresa }, req.ip); } catch {}
             
             logDatabase('INSERT', 'departamento', { id: departamentoId });
             
@@ -115,6 +116,7 @@ class DepartamentoController {
 
             await departamento.update(departamentoData);
             const departamentoAtualizado = await Departamento.findById(id);
+            try { logAudit(req.user?.id, 'update', 'departamento', id, departamentoData, req.ip); } catch {}
             
             logDatabase('UPDATE', 'departamento', { id });
             
@@ -160,6 +162,7 @@ class DepartamentoController {
             await departamento.delete();
             
             logDatabase('DELETE', 'departamento', { id });
+            try { logAudit(req.user?.id, 'delete', 'departamento', id, {}, req.ip); } catch {}
             
             res.json({
                 success: true,
@@ -233,6 +236,7 @@ class DepartamentoController {
             await departamento.addColaborador(colaborador_id);
             
             logDatabase('INSERT', 'colaborador_departamento', { departamento_id: id, colaborador_id });
+            try { logAudit(req.user?.id, 'add_member', 'departamento', id, { colaborador_id }, req.ip); } catch {}
             
             res.json({
                 success: true,
@@ -266,6 +270,7 @@ class DepartamentoController {
             await departamento.removeColaborador(colaborador_id);
             
             logDatabase('DELETE', 'colaborador_departamento', { departamento_id: id, colaborador_id });
+            try { logAudit(req.user?.id, 'remove_member', 'departamento', id, { colaborador_id }, req.ip); } catch {}
             
             res.json({
                 success: true,

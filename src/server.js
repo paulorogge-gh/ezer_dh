@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const { logRequest, errorHandler, logger } = require('./utils/logger');
+const { logRequest, errorHandler, logger, auditRequest } = require('./utils/logger');
 const apiRoutes = require('./routes');
 const { testConnection } = require('./config/db');
 
@@ -37,6 +37,8 @@ app.use(cors({ origin: true, credentials: true }));
 app.options('*', cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(logRequest);
+// Auditoria automática de requests autenticados (aplicada após JSON/body)
+app.use(auditRequest);
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -80,6 +82,7 @@ pageRoute('/treinamentos', 'treinamentos.html');
 pageRoute('/feedbacks', 'feedbacks.html');
 pageRoute('/avaliacoes', 'avaliacoes.html');
 pageRoute('/pdi', 'pdi.html');
+pageRoute('/auditoria', 'auditoria.html');
 
 app.get('/', (req, res) => {
   res.redirect('/login');

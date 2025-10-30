@@ -22,6 +22,7 @@ const avaliacaoRoutes = require('./avaliacaoRoutes');
 const pdiRoutes = require('./pdiRoutes');
 const usuarioRoutes = require('./usuarioRoutes');
 const liderRoutes = require('./liderRoutes');
+const auditRoutes = require('./auditRoutes');
 
 mountIfRouter('/auth', authRoutes);
 mountIfRouter('/consultoria', consultoriaRoutes);
@@ -35,6 +36,7 @@ mountIfRouter('/avaliacoes', avaliacaoRoutes);
 mountIfRouter('/pdi', pdiRoutes);
 mountIfRouter('/usuarios', usuarioRoutes);
 mountIfRouter('/lideres', liderRoutes);
+mountIfRouter('/auditoria', auditRoutes);
 
 module.exports = router;
  

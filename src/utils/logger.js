@@ -128,6 +128,79 @@ const logBusiness = (action, entity, data = {}) => {
     });
 };
 
+// Auditoria detalhada de ações do usuário
+// Aceita dois formatos:
+// 1) userId-first: (userId, action, entity, entityId, details, ip)
+// 2) action-first: (action, userId, details, ip)
+const logAudit = (...args) => {
+  try {
+    let userId = null;
+    let action = null;
+    let entity = null;
+    let entityId = null;
+    let details = {};
+    let ip = null;
+
+    if (typeof args[0] === 'string') {
+      // action-first
+      action = args[0] || null;
+      userId = args[1] || null;
+      details = args[2] || {};
+      ip = args[3] || null;
+    } else {
+      // userId-first
+      userId = args[0] || null;
+      action = args[1] || null;
+      entity = args[2] || null;
+      entityId = args[3] || null;
+      details = args[4] || {};
+      ip = args[5] || null;
+    }
+
+    logger.info('Audit', {
+      userId,
+      action,
+      entity,
+      entityId,
+      ip,
+      details: JSON.stringify(details)
+    });
+
+    // Persistência opcional em banco
+    try {
+      const { AuditLog } = require('../models');
+      AuditLog.create({ action, user_id: userId, ip, details }).catch(() => {});
+    } catch (dbErr) {
+      logger.warn('Audit DB persist failed', { message: dbErr.message });
+    }
+  } catch (e) {
+    // nunca quebrar fluxo por falha de auditoria
+  }
+};
+
+// Middleware para auditoria automática de requests autenticados
+const auditRequest = (req, res, next) => {
+  try {
+    const start = Date.now();
+    res.on('finish', () => {
+      try {
+        const durationMs = Date.now() - start;
+        const userId = (req.user && req.user.id) || null;
+        // Auditar apenas métodos que alteram estado
+        const mutating = ['POST','PUT','PATCH','DELETE'];
+        if (!mutating.includes(req.method)) return;
+        logAudit(userId, req.method, 'http', null, {
+          url: req.originalUrl || req.url,
+          status: res.statusCode,
+          durationMs,
+          bodyKeys: req.body ? Object.keys(req.body) : [],
+        }, req.ip);
+      } catch {}
+    });
+  } catch {}
+  next();
+};
+
 // Middleware para capturar erros não tratados
 const errorHandler = (error, req, res, next) => {
     logError(error, req);
@@ -178,4 +251,6 @@ module.exports = {
     errorHandler,
     unhandledRejectionHandler,
     uncaughtExceptionHandler
+  ,logAudit
+  ,auditRequest
 };

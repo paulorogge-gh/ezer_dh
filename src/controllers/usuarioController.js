@@ -1,6 +1,6 @@
 const { getPool } = require('../config/db');
 const { Usuario, Empresa, Colaborador, Consultoria } = require('../models');
-const { logDatabase, logError, logAuth } = require('../utils/logger');
+const { logDatabase, logError, logAuth, logAudit } = require('../utils/logger');
 
 class UsuarioController {
     static sanitize(v) { return typeof v === 'string' ? v.trim() : v; }
@@ -162,6 +162,7 @@ class UsuarioController {
             const id = await Usuario.create(payload);
             logDatabase('INSERT', 'usuario', { id });
             const created = await Usuario.findById(id);
+            try { logAudit('create_usuario', req.user?.id, { id, email, tipo_usuario, id_empresa: id_empresa_to_save, id_colaborador: id_colaborador_to_save }, req.ip); } catch {}
             res.status(201).json({ success: true, data: created ? created.toSafeObject() : { id_usuario: id }, message: 'Usuário criado com sucesso' });
         } catch (error) {
             logError(error, req);
@@ -208,6 +209,12 @@ class UsuarioController {
             const ok = await usuario.update(updateData);
             logDatabase('UPDATE', 'usuario', { id });
             const updated = await Usuario.findById(id);
+            try {
+                const auditDetails = { id };
+                const { senha, ...rest } = body || {};
+                auditDetails.changes = rest;
+                logAudit('update_usuario', req.user?.id, auditDetails, req.ip);
+            } catch {}
             res.json({ success: true, data: updated ? updated.toSafeObject() : { id_usuario: Number(id) }, message: 'Usuário atualizado com sucesso' });
         } catch (error) {
             logError(error, req);
@@ -224,6 +231,7 @@ class UsuarioController {
             if (!usuario) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
             await usuario.update({ status });
             logDatabase('UPDATE', 'usuario', { id, status });
+            try { logAudit('update_usuario_status', req.user?.id, { id, status }, req.ip); } catch {}
             res.json({ success: true, message: 'Status atualizado com sucesso' });
         } catch (error) {
             logError(error, req);
@@ -240,6 +248,7 @@ class UsuarioController {
             if (!usuario) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
             await usuario.update({ senha: nova_senha, tentativas_login: 0, bloqueado_ate: null });
             logAuth('password_reset', Number(id), req.ip);
+            try { logAudit('reset_password', req.user?.id, { id }, req.ip); } catch {}
             res.json({ success: true, message: 'Senha redefinida com sucesso' });
         } catch (error) {
             logError(error, req);
@@ -254,6 +263,7 @@ class UsuarioController {
             if (!usuario) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
             await usuario.delete();
             logDatabase('DELETE', 'usuario', { id });
+            try { logAudit('delete_usuario', req.user?.id, { id }, req.ip); } catch {}
             res.json({ success: true, message: 'Usuário excluído com sucesso' });
         } catch (error) {
             logError(error, req);

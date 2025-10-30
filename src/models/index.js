@@ -16,6 +16,7 @@ const Treinamento = require('./treinamento');
 const Feedback = require('./feedback');
 const Avaliacao = require('./avaliacao');
 const Pdi = require('./pdi');
+const AuditLog = require('./auditLog');
 const OcorrenciaAnexo = require('./ocorrenciaAnexo');
 
 module.exports = {
@@ -32,6 +33,7 @@ module.exports = {
     Treinamento,
     Feedback,
     Avaliacao,
-    Pdi
+    Pdi,
+    AuditLog
     , OcorrenciaAnexo
 };

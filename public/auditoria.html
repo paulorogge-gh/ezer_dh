@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auditoria</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .audit-container { padding: 16px; }
+    .audit-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .audit-table { width: 100%; border-collapse: collapse; }
+    .audit-table th, .audit-table td { border: 1px solid #ddd; padding: 8px; }
+    .audit-table th { background: #f7f7f7; text-align: left; }
+    .muted { color: #666; font-size: 12px; }
+  </style>
+  <script defer src="/js/config.js"></script>
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/auditoria.js"></script>
+</head>
+<body>
+  <div class="audit-container">
+    <h1>Auditoria</h1>
+    <div class="audit-filters">
+      <input type="text" id="filterAction" placeholder="Ação (ex.: update_usuario)" />
+      <input type="number" id="filterUser" placeholder="ID Usuário" />
+      <input type="date" id="filterFrom" />
+      <input type="date" id="filterTo" />
+      <input type="text" id="filterQ" placeholder="Busca em detalhes" />
+      <button id="btnBuscar">Buscar</button>
+    </div>
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Usuário</th>
+          <th>Ação</th>
+          <th>IP</th>
+          <th>Detalhes</th>
+        </tr>
+      </thead>
+      <tbody id="auditBody"></tbody>
+    </table>
+    <p class="muted">Apenas perfis Consultoria e Empresa possuem acesso a esta página.</p>
+  </div>
+</body>
+</html>
+

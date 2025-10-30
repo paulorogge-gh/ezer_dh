@@ -1,5 +1,5 @@
 const { Treinamento, Colaborador } = require('../models');
-const { logDatabase, logError } = require('../utils/logger');
+const { logDatabase, logError, logAudit } = require('../utils/logger');
 const { uploadBuffer, deleteBlob, listByPrefix, downloadToBuffer, getBlobUrl } = require('../services/azureBlob');
 const CONTAINER = process.env.AZURE_BLOB_CONTAINER || 'ezer-dh';
 const TreinamentoAnexo = require('../models/treinamentoAnexo');
@@ -79,6 +79,7 @@ class TreinamentoController {
         }
       }
       logDatabase('INSERT', 'treinamento', { id });
+      try { logAudit(req.user?.id, 'create', 'treinamento', id, { id_colaborador, nome, data_inicio, data_fim, categoria, carga_horaria }, req.ip); } catch {}
       const created = await Treinamento.findById(id);
       res.status(201).json({ success: true, data: created, message: 'Treinamento criado com sucesso' });
     } catch (error) {
@@ -114,6 +115,7 @@ class TreinamentoController {
         }
       }
       logDatabase('UPDATE', 'treinamento', { id });
+      try { logAudit(req.user?.id, 'update', 'treinamento', id, data, req.ip); } catch {}
       const updated = await Treinamento.findById(id);
       res.json({ success: true, data: updated, message: 'Treinamento atualizado com sucesso' });
     } catch (error) {
@@ -130,6 +132,7 @@ class TreinamentoController {
       await TreinamentoAnexo.deleteAllByTreinamento(Number(id));
       await t.delete();
       logDatabase('DELETE', 'treinamento', { id });
+      try { logAudit(req.user?.id, 'delete', 'treinamento', id, {}, req.ip); } catch {}
       res.json({ success: true, message: 'Treinamento excluído com sucesso' });
     } catch (error) {
       logError(error, req);
@@ -149,7 +152,7 @@ class TreinamentoController {
       const uploaded = [];
       for (const f of files) {
         const name = prefix + Date.now() + '-' + (f.originalname || 'file');
-        const up = await uploadBuffer(CONTAINER, name, f.buffer, f.mimetype);
+      const up = await uploadBuffer(CONTAINER, name, f.buffer, f.mimetype);
         uploaded.push(up);
         try {
           await TreinamentoAnexo.create({ id_treinamento: Number(id), url: up.url, nome_arquivo: f.originalname || up.name, content_type: f.mimetype });
@@ -158,6 +161,7 @@ class TreinamentoController {
         }
       }
       logDatabase('INSERT', 'treinamento_attachments', { id, count: uploaded.length });
+      try { logAudit(req.user?.id, 'upload_attachment', 'treinamento', id, { count: uploaded.length }, req.ip); } catch {}
       res.json({ success: true, data: uploaded });
     } catch (error) {
       logError(error, req);
@@ -193,6 +197,7 @@ class TreinamentoController {
         await TreinamentoAnexo.deleteByUrl(Number(id), url);
       } catch (err) { logError(err, req); }
       logDatabase('DELETE', 'treinamento_attachments', { id, blobName });
+      try { logAudit(req.user?.id, 'delete_attachment', 'treinamento', id, { blobName }, req.ip); } catch {}
       res.json({ success: true });
     } catch (error) {
       logError(error, req);

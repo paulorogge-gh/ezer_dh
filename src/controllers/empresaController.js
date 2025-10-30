@@ -1,5 +1,5 @@
 const { Empresa } = require('../models');
-const { logDatabase, logError, logAuth } = require('../utils/logger');
+const { logDatabase, logError, logAuth, logAudit } = require('../utils/logger');
 
 class EmpresaController {
     /**
@@ -103,6 +103,7 @@ class EmpresaController {
             const empresa = await Empresa.findById(empresaId);
             
             logDatabase('INSERT', 'empresa', { id: empresaId });
+            try { logAudit('create_empresa', req.user?.id, { id: empresaId, nome: empresaData.nome, cnpj: empresaData.cnpj }, req.ip); } catch {}
             
             res.status(201).json({
                 success: true,
@@ -182,6 +183,7 @@ class EmpresaController {
             const empresaAtualizada = await Empresa.findById(id);
             
             logDatabase('UPDATE', 'empresa', { id });
+            try { logAudit('update_empresa', req.user?.id, { id, changes: empresaData || {} }, req.ip); } catch {}
             
             res.json({
                 success: true,
@@ -235,6 +237,7 @@ class EmpresaController {
             await empresa.delete();
             
             logDatabase('DELETE', 'empresa', { id });
+            try { logAudit('delete_empresa', req.user?.id, { id }, req.ip); } catch {}
             
             res.json({
                 success: true,
