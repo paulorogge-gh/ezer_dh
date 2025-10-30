@@ -175,7 +175,15 @@
         function close() {
             try {
                 overlay.classList.remove('open');
-                setTimeout(() => overlay.remove(), 200);
+                setTimeout(() => {
+                    try {
+                        // Remover qualquer overlay de loading dentro do modal
+                        overlay.querySelectorAll('.loading-overlay').forEach(el => { try { el.remove(); } catch {} });
+                        // Remover overlay de loading global se estiver aberto
+                        document.querySelectorAll('.loading-overlay.global').forEach(el => { try { el.remove(); } catch {} });
+                    } catch {}
+                    overlay.remove();
+                }, 200);
             } catch {}
             detach();
         }
@@ -238,7 +246,15 @@
         function close() {
             try {
                 overlay.classList.remove('open');
-                setTimeout(() => overlay.remove(), 200);
+                setTimeout(() => {
+                    try {
+                        // Remover qualquer overlay de loading dentro do modal
+                        overlay.querySelectorAll('.loading-overlay').forEach(el => { try { el.remove(); } catch {} });
+                        // Remover overlay de loading global se estiver aberto
+                        document.querySelectorAll('.loading-overlay.global').forEach(el => { try { el.remove(); } catch {} });
+                    } catch {}
+                    overlay.remove();
+                }, 200);
             } catch {}
             detach();
         }
