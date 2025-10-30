@@ -180,8 +180,13 @@ class TreinamentoController {
 
   static async deleteAttachment(req, res) {
     try {
-      const { id, blobName } = req.params;
-      // blobName deve vir completo no formato treinamentos/{id}/arquivo
+      const { id } = req.params;
+      // Suportar blobName vindo em req.params.blobName ou via curinga (req.params[0])
+      let raw = req.params.blobName || req.params[0];
+      if (!raw) return res.status(400).json({ success: false, error: 'Nome de blob ausente' });
+      // Se vier apenas o nome do arquivo, reconstruir caminho completo
+      const expectedPrefix = `treinamentos/${id}/`;
+      const blobName = raw.startsWith(expectedPrefix) ? raw : (expectedPrefix + raw);
       await deleteBlob(CONTAINER, blobName);
       try {
         const url = getBlobUrl(CONTAINER, blobName);
@@ -197,14 +202,18 @@ class TreinamentoController {
 
   static async getAttachmentContent(req, res) {
     try {
-      const { id, blobName } = req.params;
-      // Segurança: o blob deve estar dentro do prefixo do treinamento
+      const { id } = req.params;
+      // Suportar blobName vindo em req.params.blobName ou via curinga (req.params[0])
+      let raw = req.params.blobName || req.params[0];
+      if (!raw) return res.status(400).json({ success: false, error: 'Nome de blob ausente' });
       const expectedPrefix = `treinamentos/${id}/`;
-      if (!blobName || !blobName.startsWith(expectedPrefix)) {
-        return res.status(400).json({ success: false, error: 'Nome de blob inválido' });
-      }
+      const blobName = raw.startsWith(expectedPrefix) ? raw : (expectedPrefix + raw);
       const { buffer, contentType } = await downloadToBuffer(CONTAINER, blobName);
+      const disp = (req.query && req.query.disposition) || 'inline';
       res.setHeader('Content-Type', contentType || 'application/octet-stream');
+      // Definir Content-Disposition para inline/attachment e sugerir filename
+      const fileName = blobName.split('/').pop() || 'arquivo';
+      res.setHeader('Content-Disposition', `${disp}; filename="${fileName}"`);
       res.send(buffer);
     } catch (error) {
       logError(error, req);
