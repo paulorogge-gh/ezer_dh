@@ -11,6 +11,8 @@ const apiRoutes = require('./routes');
 const { testConnection } = require('./config/db');
 
 const app = express();
+// Confiar no proxy (Azure Web App) para que req.ip reflita o cliente real
+app.set('trust proxy', 1);
 // Azure Web App fornece PORT; preferir PORT e cair para PORT_API
 const PORT = parseInt(process.env.PORT || process.env.PORT_API, 10) || 8000;
 
@@ -53,7 +55,12 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Rate limiting básico para API
-const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false
+});
 app.use('/api', apiLimiter);
 
 // Montagem das rotas da API
