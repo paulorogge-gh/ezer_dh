@@ -171,7 +171,13 @@ class Feedback {
             const pool = getPool();
             const [result] = await pool.execute(
                 'INSERT INTO feedback (id_avaliador, id_avaliado, data, classificacao, observacoes) VALUES (?, ?, ?, ?, ?)',
-                [data.id_avaliador, data.id_avaliado, data.data, data.classificacao, data.observacoes]
+                [
+                    data.id_avaliador,
+                    data.id_avaliado,
+                    data.data,
+                    data.classificacao,
+                    data.observacoes
+                ]
             );
             return result.insertId;
         } catch (error) {
@@ -184,8 +190,14 @@ class Feedback {
         try {
             const pool = getPool();
             await pool.execute(
-                'UPDATE feedback SET data = ?, classificacao = ?, observacoes = ? WHERE id_feedback = ?',
-                [data.data, data.classificacao, data.observacoes, this.id_feedback]
+                'UPDATE feedback SET id_avaliado = ?, data = ?, classificacao = ?, observacoes = ? WHERE id_feedback = ?',
+                [
+                    (data.id_avaliado || this.id_avaliado),
+                    data.data,
+                    data.classificacao,
+                    data.observacoes,
+                    this.id_feedback
+                ]
             );
             return true;
         } catch (error) {

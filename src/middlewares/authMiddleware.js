@@ -21,8 +21,9 @@ const authenticateToken = (req, res, next) => {
         const decoded = verifyToken(token);
         // Mapear IDs de referência conforme o role, garantindo compatibilidade
         const role = decoded.role;
-        const empresaId = decoded.empresa_id || undefined;
-        const consultoriaId = decoded.consultoria_id || undefined;
+        const empresaId = decoded.empresa_id || decoded.id_empresa || undefined;
+        const consultoriaId = decoded.consultoria_id || decoded.id_consultoria || undefined;
+        const idReferencia = decoded.id_referencia || decoded.id_colaborador || undefined;
         
         // Adicionar dados do usuário ao request
         req.user = {
@@ -30,7 +31,9 @@ const authenticateToken = (req, res, next) => {
             email: decoded.email,
             role: role,
             empresa_id: empresaId,
-            consultoria_id: consultoriaId
+            consultoria_id: consultoriaId,
+            id_referencia: idReferencia,
+            id_colaborador: decoded.id_colaborador || undefined
         };
 
         logAuth('token_validated', decoded.id, req.ip);

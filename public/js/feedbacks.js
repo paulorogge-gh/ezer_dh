@@ -3,6 +3,7 @@ const apiBase = window.API_CONFIG?.BASE_URL;
 (function(){
     let cache = [];
     const els = { tableBody: null, btnNovo: null, searchInput: null, empresaFilter: null, dataInicioFilter: null, dataFimFilter: null, classificacaoFilter: null };
+    const colaboradorNameCache = new Map();
 
     function q(sel){ return document.querySelector(sel); }
     function sanitize(v){ try { return (v||'').toString().trim(); } catch { return ''; } }
@@ -80,10 +81,11 @@ const apiBase = window.API_CONFIG?.BASE_URL;
     function renderRow(f){
         const tr = document.createElement('tr');
         const data = f.data ? fmtBR(f.data) : '';
+        const avaliadoNomeNow = sanitize(f.avaliado_nome);
         tr.innerHTML = `
             <td>${data}</td>
             <td>${sanitize(f.avaliador_nome)}</td>
-            <td>${sanitize(f.avaliado_nome)}</td>
+            <td>${avaliadoNomeNow || '...'}</td>
             <td>${sanitize(f.classificacao)}</td>
             <td>
                 <div class="btn-group" role="group" aria-label="Ações">
@@ -93,6 +95,15 @@ const apiBase = window.API_CONFIG?.BASE_URL;
                 </div>
             </td>`;
         els.tableBody.appendChild(tr);
+        // Resolver nome do avaliado, se vier vazio
+        if (!avaliadoNomeNow && f.id_avaliado) {
+            resolveColaboradorNome(f.id_avaliado).then((name) => {
+                try {
+                    const td = tr.children[2];
+                    if (td && name) td.textContent = sanitize(name);
+                } catch {}
+            }).catch(()=>{});
+        }
     }
 
     async function fetchColaboradoresByEmpresa(idEmpresa){
@@ -133,14 +144,7 @@ const apiBase = window.API_CONFIG?.BASE_URL;
                         <option value="Neutro" ${item?.classificacao==='Neutro'?'selected':''}>Neutro</option>
                     </select>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="tipo_feedback">Tipo *</label>
-                    <select class="form-select form-control" id="tipo_feedback" name="tipo_feedback" required>
-                        <option value="">Selecione</option>
-                        <option value="Liderado" ${item?.tipo_feedback==='Liderado'?'selected':''}>Liderado</option>
-                        <option value="360º" ${item?.tipo_feedback==='360º'?'selected':''}>360º</option>
-                    </select>
-                </div>
+                
                 <div class="form-field span-2">
                     <label class="form-label" for="observacoes">Observações</label>
                     <textarea class="form-control" id="observacoes" name="observacoes" rows="4" placeholder="Descreva o feedback">${sanitize(item?.observacoes)}</textarea>
@@ -152,7 +156,8 @@ const apiBase = window.API_CONFIG?.BASE_URL;
         const isEdit = !!(item && item.id_feedback);
         // Loader preguiçoso
         const host = document.querySelector('#feedbacksTable')?.closest('.card') || document.body;
-        let timer = setTimeout(()=>{ try { window.EzerLoading && EzerLoading.show(host); } catch {} }, 200);
+        let preLoaderRef = null;
+        let timer = setTimeout(()=>{ try { if (window.EzerLoading) preLoaderRef = EzerLoading.show(host); } catch {} }, 200);
         let empresas = [];
         try {
             const tmp = document.createElement('select');
@@ -192,15 +197,16 @@ const apiBase = window.API_CONFIG?.BASE_URL;
                 if (!payload.id_avaliado) { errs.push('Avaliado'); invalid('#id_avaliado'); }
                 if (!payload.data) { errs.push('Data'); invalid('#data'); }
                 if (!payload.classificacao) { errs.push('Classificação'); invalid('#classificacao'); }
-                if (!payload.tipo_feedback) { errs.push('Tipo'); invalid('#tipo_feedback'); }
+                
                 if (errs.length) { try { showAlert('warning', `Preencha: ${errs.join(', ')}`); } catch {}; return; }
                 // normalizar
                 payload.id_empresa = Number(payload.id_empresa);
                 payload.id_avaliado = Number(payload.id_avaliado);
                 payload.observacoes = sanitize(payload.observacoes) || null;
+                let loader = { hide(){} };
                 try {
                     const container = modalRef?.el?.querySelector('.modal-card') || document.body;
-                    const loader = window.EzerLoading ? EzerLoading.show(container) : { hide(){} };
+                    loader = window.EzerLoading ? EzerLoading.show(container) : { hide(){} };
                     const url = isEdit ? `${apiBase}/feedbacks/${item.id_feedback}` : `${apiBase}/feedbacks`;
                     const method = isEdit ? 'PUT' : 'POST';
                     const resp = await auth.authenticatedRequest(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -209,10 +215,11 @@ const apiBase = window.API_CONFIG?.BASE_URL;
                     await load();
                     close();
                     try { showAlert('success', isEdit ? 'Feedback atualizado' : 'Feedback criado'); } catch {}
-                    try { loader.hide(); } catch {}
                 } catch(e) {
                     console.error('save feedback:', e);
                     try { showAlert('error', e.message||'Erro ao salvar feedback'); } catch {}
+                } finally {
+                    try { loader.hide(); } catch {}
                 }
             }
         });
@@ -220,7 +227,7 @@ const apiBase = window.API_CONFIG?.BASE_URL;
             const root = modalRef?.el || document;
             // parar spinner
             try { clearTimeout(timer); } catch {}
-            try { window.EzerLoading && EzerLoading.hide && EzerLoading.hide(); } catch {}
+            try { preLoaderRef && preLoaderRef.hide && preLoaderRef.hide(); } catch {}
             const empSel = root.querySelector('#id_empresa');
             const avSel = root.querySelector('#id_avaliado');
             empSel?.addEventListener('change', async function(){
@@ -240,18 +247,38 @@ const apiBase = window.API_CONFIG?.BASE_URL;
             const cont = document.body; const l = window.EzerLoading ? EzerLoading.show(cont) : { hide(){} };
             const resp = await auth.authenticatedRequest(`${apiBase}/feedbacks/${id}`, { method:'GET' }); const j = await resp.json(); if (!j.success) throw new Error(j.error||'Falha ao carregar');
             const f = j.data;
-            const html = `
+                const html = `
                 <div class="details-grid">
                     <div class="details-item"><div class="details-label">Avaliador</div><div class="details-value">${sanitize(f.avaliador_nome)}</div></div>
-                    <div class="details-item"><div class="details-label">Avaliado</div><div class="details-value">${sanitize(f.avaliado_nome)}</div></div>
+                    <div class="details-item"><div class="details-label">Avaliado</div><div class="details-value" id="detailAvaliadoNome">${sanitize(f.avaliado_nome) || '...'}</div></div>
                     <div class="details-item"><div class="details-label">Data</div><div class="details-value">${fmtBR(f.data)}</div></div>
                     <div class="details-item"><div class="details-label">Classificação</div><div class="details-value">${sanitize(f.classificacao)}</div></div>
-                    <div class="details-item"><div class="details-label">Tipo</div><div class="details-value">${sanitize(f.tipo_feedback)}</div></div>
                     <div class="details-item span-2"><div class="details-label">Observações</div><div class="details-value">${sanitize(f.observacoes)}</div></div>
                 </div>`;
             showInfoModal({ title:'Detalhes do Feedback', html, closeText:'Fechar', size:'lg' });
+            // Resolver nome do avaliado, se vier vazio
+            if (!sanitize(f.avaliado_nome) && f.id_avaliado) {
+                resolveColaboradorNome(f.id_avaliado).then((name) => {
+                    try {
+                        const el = document.getElementById('detailAvaliadoNome');
+                        if (el && name) el.textContent = sanitize(name);
+                    } catch {}
+                }).catch(()=>{});
+            }
             try { l.hide(); } catch {}
         } catch(e) { try { showAlert('error', e.message||'Erro ao exibir'); } catch {} }
+    }
+
+    async function resolveColaboradorNome(idColaborador){
+        try {
+            const key = Number(idColaborador);
+            if (colaboradorNameCache.has(key)) return colaboradorNameCache.get(key);
+            const resp = await auth.authenticatedRequest(`${apiBase}/colaboradores/${key}`, { method:'GET' });
+            const j = await resp.json();
+            const name = j && j.success && j.data ? j.data.nome : null;
+            if (name) colaboradorNameCache.set(key, name);
+            return name;
+        } catch { return null; }
     }
 
     async function deleteItem(id){

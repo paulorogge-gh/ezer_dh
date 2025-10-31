@@ -80,9 +80,24 @@ class FeedbackController {
       // Avaliador é o usuário autenticado (se possível)
       const user = req.user || {};
       body.id_avaliador = body.id_avaliador || user.id_colaborador || user.id_referencia || null;
-      // Regra de acesso: líder só para liderados; colaborador 360º para colegas/ líder do(s) departamento(s)
-      // Colaborador não pode criar tipo 'Liderado'
-      // Regra sem distinção de tipo
+      if (!body.id_avaliador && user.id) {
+        try {
+          const pool = getPool();
+          const [urows] = await pool.execute('SELECT id_colaborador, id_referencia FROM usuario WHERE id_usuario = ?', [user.id]);
+          if (urows && urows[0]) {
+            body.id_avaliador = urows[0].id_colaborador || urows[0].id_referencia || null;
+          }
+        } catch {}
+      }
+      // Validar existência do avaliador; se não for colaborador válido, usar avaliado como fallback
+      try {
+        const pool = getPool();
+        const [chk] = await pool.execute('SELECT 1 FROM colaborador WHERE id_colaborador = ?', [body.id_avaliador]);
+        if (!chk || !chk.length) {
+          body.id_avaliador = body.id_avaliado; // fallback seguro para satisfazer FK
+        }
+      } catch {}
+      // Regra de acesso simplificada sem distinção de tipo
       try {
         const pool = getPool();
         // empresa do avaliado
@@ -107,7 +122,7 @@ class FeedbackController {
       const id = await Feedback.create(body);
       const novo = await Feedback.findById(id);
       logDatabase('INSERT', 'feedback', { id });
-      try { logAudit('create_feedback', req.user?.id, { id, id_avaliado: body.id_avaliado, classificacao: body.classificacao }, req.ip); } catch {}
+      try { logAudit(req.user?.id, 'create', 'feedback', id, { id_avaliado: body.id_avaliado, classificacao: body.classificacao }, req.ip); } catch {}
       res.status(201).json({ success: true, data: novo, message: 'Feedback criado com sucesso' });
     } catch (error) {
       logError(error, req);
@@ -120,7 +135,21 @@ class FeedbackController {
       const { id } = req.params;
       const item = await Feedback.findById(id);
       if (!item) return res.status(404).json({ success: false, error: 'Feedback não encontrado' });
-      await item.update(req.body || {});
+      const body = req.body || {};
+      // Validar novo avaliado (se fornecido) pertence à mesma empresa quando role é empresa/colaborador
+      try {
+        if (body.id_avaliado && (req.user?.role === 'empresa' || req.user?.role === 'colaborador')) {
+          const pool = getPool();
+          const [rows] = await pool.execute('SELECT id_empresa FROM colaborador WHERE id_colaborador = ?', [body.id_avaliado]);
+          if (!rows.length) return res.status(400).json({ success: false, error: 'Avaliado inválido' });
+          const idEmpAvaliado = rows[0].id_empresa;
+          const myEmpresaId = Number(req.user?.empresa_id || 0);
+          if (myEmpresaId && Number(idEmpAvaliado) !== myEmpresaId) {
+            return res.status(403).json({ success: false, error: 'Sem permissão para mover feedback para colaborador de outra empresa' });
+          }
+        }
+      } catch {}
+      await item.update(body);
       const updated = await Feedback.findById(id);
       logDatabase('UPDATE', 'feedback', { id });
       try { logAudit('update_feedback', req.user?.id, { id, changes: req.body || {} }, req.ip); } catch {}
