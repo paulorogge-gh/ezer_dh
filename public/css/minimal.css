@@ -6,19 +6,19 @@
    1. VARIÁVEIS E CONFIGURAÇÕES
    ================================================== */
 :root {
-    /* Cores Suaves */
-    --primary-50:  #f2f8f9;
-    --primary-100: #d9eff1;
-    --primary-200: #b3dee3;
-    --primary-300: #80c4cc;
-    --primary-400: #4da9b3;
-    --primary-500: #1f7f8c;   
-    --primary-600: #186673;
-    --primary-700: #124e59;
-    --primary-800: #0d383f;
-    --primary-900: #092a30;
-    
-    --gray-50: #f8fafc;
+
+    --primary-50:  #f4f1ff;
+    --primary-100: #e6dbff;
+    --primary-200: #d1bfff;
+    --primary-300: #b497ff;
+    --primary-400: #9465ff;
+    --primary-500: #7c3aed;
+    --primary-600: #6929d9;
+    --primary-700: #581bbf;
+    --primary-800: #47149e;
+    --primary-900: #37107d;
+  
+    --gray-50:  #f8fafc;
     --gray-100: #f1f5f9;
     --gray-200: #e2e8f0;
     --gray-300: #cbd5e1;

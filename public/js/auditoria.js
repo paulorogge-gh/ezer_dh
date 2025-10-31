@@ -1,5 +1,28 @@
 (() => {
+  function showGlobalLoading() {
+    try {
+      // Evitar múltiplos overlays
+      if (document.querySelector('.loading-overlay.global')) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'loading-overlay global';
+      overlay.innerHTML = '<div class="spinner"></div>';
+      document.body.appendChild(overlay);
+      // permitir transição
+      requestAnimationFrame(() => { overlay.classList.add('open'); });
+    } catch {}
+  }
+
+  function hideGlobalLoading() {
+    try {
+      document.querySelectorAll('.loading-overlay.global').forEach(el => {
+        try { el.classList.remove('open'); } catch {}
+        setTimeout(() => { try { el.remove(); } catch {} }, 150);
+      });
+    } catch {}
+  }
+
   async function fetchAudit() {
+    showGlobalLoading();
     const action = document.getElementById('filterAction').value || '';
     const user_id = document.getElementById('filterUser').value || '';
     const from = document.getElementById('filterFrom').value || '';
@@ -11,14 +34,16 @@
     if (from) params.set('from', from);
     if (to) params.set('to', to);
     if (q) params.set('q', q);
-    const base = window.API_CONFIG?.BASE_URL || '/api';
-    const url = `${base}/auditoria?${params.toString()}`;
-    const headers = {};
-    try { const t = await window.Auth?.getToken?.(); if (t) headers['Authorization'] = `Bearer ${t}`; } catch {}
-    const res = await fetch(url, { headers });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Falha ao carregar auditoria');
-    renderRows(data.data || []);
+    const apiBase = window.API_CONFIG?.BASE_URL || `${window.location.origin}/api`;
+    const url = `${apiBase}/auditoria?${params.toString()}`;
+    try {
+      const res = await (window.auth ? auth.authenticatedRequest(url, { method: 'GET' }) : fetch(url));
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Falha ao carregar auditoria');
+      renderRows(data.data || []);
+    } finally {
+      hideGlobalLoading();
+    }
   }
 
   function renderRows(rows) {
@@ -46,7 +71,12 @@
       }
     } catch {}
     document.getElementById('btnBuscar').addEventListener('click', fetchAudit);
-    fetchAudit().catch(() => {});
+    fetchAudit().catch((e) => {
+      try {
+        const container = document.querySelector('.audit-container');
+        if (container) container.insertAdjacentHTML('beforeend', `<div class="alert alert-danger">${(e && e.message) || 'Erro ao carregar auditoria'}</div>`);
+      } catch {}
+    });
   });
 })();
 

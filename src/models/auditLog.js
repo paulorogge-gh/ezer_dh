@@ -26,11 +26,13 @@ class AuditLog {
     if (user_id) { where.push('user_id = ?'); params.push(Number(user_id)); }
     if (from) { where.push('created_at >= ?'); params.push(from); }
     if (to) { where.push('created_at <= ?'); params.push(to); }
-    if (q) { where.push('(JSON_SEARCH(details, "one", ?) IS NOT NULL)'); params.push(q); }
+    if (q) { where.push('(details IS NOT NULL AND CAST(details AS CHAR) LIKE ?)'); params.push(`%${q}%`); }
     let sql = 'SELECT * FROM audit_log';
     if (where.length) sql += ' WHERE ' + where.join(' AND ');
-    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(Number(limit), Number(offset));
+    // Sanitizar limit/offset e incorporar diretamente (evitar placeholders que podem falhar em alguns ambientes)
+    const safeLimit = Math.max(1, Math.min(1000, Number(limit) || 100));
+    const safeOffset = Math.max(0, Number(offset) || 0);
+    sql += ` ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     const [rows] = await pool.execute(sql, params);
     return rows.map(r => new AuditLog(r));
   }
